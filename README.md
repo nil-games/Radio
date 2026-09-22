@@ -1,4 +1,4 @@
-# Radio100
+# НЕ ТА ЧАСТОТА
 
 **Игровой джем** · Тема: «Не та клавиша» · Дедлайн: 27 сентября 2026, 17:00
 
@@ -6,8 +6,6 @@ Narrative Work Simulator / Mystery / Puzzle / Mysticism / Horror · PC · от �
 Сеттинг: российская провинциальная радиостанция, конец 1990-х — начало 2000-х
 
 Полный дизайн-документ: [`Docs/GDD НЕ ТА ЧАСТОТА V5.docx`](Docs/) — версия 0.3.
-
-> GDD пока написан под рабочим названием «НЕ ТА ЧАСТОТА». Актуальное название проекта — **Radio100**.
 
 ## Концепция
 
@@ -90,8 +88,8 @@ Narrative Work Simulator / Mystery / Puzzle / Mysticism / Horror · PC · от �
 
 ```powershell
 # 1. Клонировать репозиторий
-git clone https://github.com/nil-games/Radio.git Radio100
-cd Radio100
+git clone https://github.com/nil-games/Radio.git
+cd Radio
 
 # 2. Инициализировать Git LFS (один раз на машине)
 git lfs install
@@ -100,7 +98,7 @@ git lfs install
 git checkout dev-nikolas
 
 # 4. Открыть проект в Unity 6000.4.1f1:
-#    Unity Hub -> Add -> Add project from disk -> папка Radio100
+#    Unity Hub -> Add -> Add project from disk -> папка Radio
 ```
 
 > Есть ещё один обязательный шаг — подключение Unity-мерджера сцен.

@@ -110,3 +110,4 @@ InitTestScene*.unity*
 
 # Скриншоты, которые MCP делает для самопроверки
 /[Aa]ssets/[Ss]creenshots/
+/[Aa]ssets/[Ss]creenshots.meta

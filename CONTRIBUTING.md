@@ -28,8 +28,8 @@
 ### 1. Клонировать
 
 ```powershell
-git clone https://github.com/nil-games/Radio.git
-cd Radio
+git clone https://github.com/nil-games/Radio.git Radio100
+cd Radio100
 ```
 
 ### 2. Включить Git LFS
@@ -69,7 +69,7 @@ git checkout dev-nikolas
 
 ### 6. Открыть проект
 
-В Unity Hub: **Add → Add project from disk** → папка `Radio`. Новый проект через «New project» создавать **не нужно** — репозиторий уже является проектом.
+В Unity Hub: **Add → Add project from disk** → папка `Radio100`. Новый проект через «New project» создавать **не нужно** — репозиторий уже является проектом.
 
 ---
 

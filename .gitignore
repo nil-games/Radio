@@ -104,3 +104,6 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Конфиг MCP-серверов: содержит абсолютные пути этой машины
+.mcp.json

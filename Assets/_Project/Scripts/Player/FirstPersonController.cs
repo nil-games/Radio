@@ -39,6 +39,7 @@ namespace Radio.Player
         private Vector3 _horizontalVelocity;
         private float _verticalVelocity;
         private float _pitch;
+        private bool _suspended;
 
         private void Awake()
         {
@@ -67,7 +68,7 @@ namespace Radio.Player
         private void OnEnable()
         {
             _actions?.Player.Enable();
-            SetCursorLocked(true);
+            SetCursorLocked(!_suspended);
         }
 
         private void OnDisable()
@@ -81,8 +82,37 @@ namespace Radio.Player
             _actions?.Dispose();
         }
 
+        /// <summary>Приостановлено ли управление: игрок сидит, смотрит в меню и т.п.</summary>
+        public bool IsSuspended => _suspended;
+
+        /// <summary>
+        /// Приостанавливает ходьбу и обзор, не выключая компонент.
+        /// enabled = false здесь не годится: OnDisable снял бы всю карту Player вместе
+        /// с действием Interact, которым игрок и выходит обратно.
+        /// </summary>
+        public void SetSuspended(bool suspended)
+        {
+            if (_suspended == suspended)
+            {
+                return;
+            }
+
+            _suspended = suspended;
+
+            // Гасим инерцию: иначе после вставания персонаж доедет разгон, набранный до посадки.
+            _horizontalVelocity = Vector3.zero;
+            _verticalVelocity = suspended ? 0f : -2f;
+
+            SetCursorLocked(!suspended);
+        }
+
         private void Update()
         {
+            if (_suspended)
+            {
+                return;
+            }
+
             HandleLook();
             HandleMove();
         }

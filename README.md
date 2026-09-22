@@ -33,7 +33,7 @@ _Здесь описание игры — заполнить по GDD._
 
 ```powershell
 # 1. Клонировать репозиторий
-git clone <URL репозитория>
+git clone https://github.com/nil-games/Radio.git
 cd Radio
 
 # 2. Инициализировать Git LFS (один раз на машине)

@@ -28,7 +28,7 @@
 ### 1. Клонировать
 
 ```powershell
-git clone <URL репозитория>
+git clone https://github.com/nil-games/Radio.git
 cd Radio
 ```
 

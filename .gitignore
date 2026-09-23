@@ -111,3 +111,6 @@ InitTestScene*.unity*
 # Скриншоты, которые MCP делает для самопроверки
 /[Aa]ssets/[Ss]creenshots/
 /[Aa]ssets/[Ss]creenshots.meta
+
+# Блокировочные файлы LibreOffice: появляются, пока документ открыт
+.~lock.*#

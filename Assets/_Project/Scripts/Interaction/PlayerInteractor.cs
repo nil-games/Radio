@@ -1,31 +1,32 @@
 using Radio.Player;
+using Radio.UI;
 using UnityEngine;
 
 namespace Radio.Interaction
 {
     /// <summary>
-    /// Ищет ближайший объект взаимодействия вокруг игрока, показывает подсказку
-    /// и передаёт нажатие выбранному объекту.
+    /// Ищет интерактивный объект под прицелом, ведёт прицел и передаёт нажатие цели.
     /// </summary>
     [RequireComponent(typeof(FirstPersonController))]
     public class PlayerInteractor : MonoBehaviour
     {
-        [Header("Поиск цели")]
-        [Tooltip("Радиус поиска вокруг игрока, м. Подсказка появляется, когда объект попал в этот радиус.")]
-        [SerializeField] private float searchRadius = 1.4f;
-
-        [Tooltip("Высота точки поиска над основанием игрока, м. Совпадает с центром капсулы CharacterController.")]
-        [SerializeField] private float probeHeight = 0.9f;
+        [Header("Прицеливание")]
+        [Tooltip("Предельная длина луча прицела, м. Отсекает заведомо далёкое раньше, " +
+                 "чем дело дойдёт до радиуса конкретного объекта.")]
+        [SerializeField] private float aimDistance = 4f;
 
         [Header("Ссылки")]
         [SerializeField] private FirstPersonController movement;
         [SerializeField] private Camera playerCamera;
-        [SerializeField] private InteractionPrompt prompt;
+        [SerializeField] private Crosshair crosshair;
 
         private InputSystem_Actions _actions;
-        private readonly Collider[] _hits = new Collider[16];
         private Interactable _focused;
         private Interactable _busyWith;
+
+        // Камера сидит внутри капсулы CharacterController, поэтому луч регулярно
+        // задевает самого игрока и нужно перебрать попадания, а не брать первое.
+        private readonly RaycastHit[] _hits = new RaycastHit[8];
 
         /// <summary>Контроллер ходьбы. Через него объекты приостанавливают управление.</summary>
         public FirstPersonController Movement => movement;
@@ -38,6 +39,9 @@ namespace Radio.Interaction
         /// тот кэшируется и внутри кадра переключения отдаёт устаревшее значение.
         /// </summary>
         public Camera ActiveCamera { get; private set; }
+
+        /// <summary>Объект под прицелом. Нужен для проверок и отладки.</summary>
+        public Interactable Focused => _focused;
 
         public void SetActiveCamera(Camera camera) => ActiveCamera = camera;
 
@@ -65,9 +69,9 @@ namespace Radio.Interaction
                 playerCamera = GetComponentInChildren<Camera>();
             }
 
-            if (movement == null || playerCamera == null || prompt == null)
+            if (movement == null || playerCamera == null || crosshair == null)
             {
-                Debug.LogError($"{nameof(PlayerInteractor)}: не заданы контроллер, камера или подсказка. Взаимодействие отключено.", this);
+                Debug.LogError($"{nameof(PlayerInteractor)}: не заданы контроллер, камера или прицел. Взаимодействие отключено.", this);
                 enabled = false;
                 return;
             }
@@ -81,7 +85,9 @@ namespace Radio.Interaction
         private void OnDisable()
         {
             _actions?.Player.Disable();
-            prompt?.Hide();
+
+            // Иначе подсветка останется висеть на объекте, с которого мы больше не следим.
+            SetFocus(null);
         }
 
         private void OnDestroy() => _actions?.Dispose();
@@ -94,7 +100,10 @@ namespace Radio.Interaction
 
             if (_busyWith != null)
             {
-                prompt.Hide();
+                // В режиме сидения курсор свободен, и неподвижный прицел в центре экрана
+                // означал бы неправду: наводиться им уже нельзя.
+                SetFocus(null);
+                crosshair.SetVisible(false);
 
                 if (pressed)
                 {
@@ -104,68 +113,131 @@ namespace Radio.Interaction
                 return;
             }
 
-            var target = FindNearest();
+            crosshair.SetVisible(true);
+            SetFocus(TryFindTarget(out var target) ? target : null);
+            crosshair.SetFocused(_focused != null);
 
-            if (target != _focused)
-            {
-                _focused?.OnFocusExit();
-                _focused = target;
-                _focused?.OnFocusEnter();
-            }
-
-            if (_focused == null)
-            {
-                prompt.Hide();
-                return;
-            }
-
-            prompt.Show(_focused.PromptAnchor.position, _focused.PromptText);
-
-            if (pressed)
+            if (_focused != null && pressed)
             {
                 _focused.Interact(this);
             }
         }
 
-        /// <summary>
-        /// Ближайший доступный объект в радиусе. Запрос каждый кадр вместо OnTriggerEnter:
-        /// игрок ходит на CharacterController без Rigidbody, а запрос не зависит от порядка
-        /// событий и бесплатно даёт «ближайший из нескольких» — это понадобится на пульте.
-        /// </summary>
-        private Interactable FindNearest()
+        private bool TryFindTarget(out Interactable target)
         {
-            var center = transform.position + Vector3.up * probeHeight;
-            var count = Physics.OverlapSphereNonAlloc(center, searchRadius, _hits, ~0, QueryTriggerInteraction.Collide);
+            target = null;
 
-            Interactable best = null;
-            var bestDistance = float.MaxValue;
+            var camera = ActiveCamera;
+
+            if (camera == null)
+            {
+                return false;
+            }
+
+            var ray = new Ray(camera.transform.position, camera.transform.forward);
+            return TryFindTarget(ray, out target);
+        }
+
+        /// <summary>
+        /// Ищет цель вдоль луча. Луч передаётся параметром, чтобы в режиме сидя
+        /// сюда же можно было отдать ScreenPointToRay от курсора.
+        /// </summary>
+        private bool TryFindTarget(Ray ray, out Interactable target)
+        {
+            target = null;
+
+            // Бьём по всем слоям: перекрытие стеной или мебелью отрабатывает само собой,
+            // без отдельной проверки видимости. Триггеры игнорируем — они служат другим
+            // целям и не должны ловить прицел.
+            var count = Physics.RaycastNonAlloc(ray, _hits, aimDistance, ~0, QueryTriggerInteraction.Ignore);
+
+            if (count == 0)
+            {
+                return false;
+            }
+
+            // RaycastNonAlloc не сортирует, поэтому ближайшее ищем сами — заодно
+            // пропуская собственную капсулу игрока, внутри которой начинается луч.
+            var nearestDistance = float.MaxValue;
+            Collider nearest = null;
 
             for (var i = 0; i < count; i++)
             {
-                // Коллайдер может висеть на ребёнке, а компонент — на корне объекта.
-                var candidate = _hits[i].GetComponentInParent<Interactable>();
-
-                if (candidate == null || !candidate.CanInteract)
+                if (_hits[i].collider.transform.IsChildOf(transform))
                 {
                     continue;
                 }
 
-                var distance = Vector3.SqrMagnitude(candidate.PromptAnchor.position - center);
-
-                if (distance < bestDistance)
+                if (_hits[i].distance < nearestDistance)
                 {
-                    bestDistance = distance;
-                    best = candidate;
+                    nearestDistance = _hits[i].distance;
+                    nearest = _hits[i].collider;
                 }
             }
 
-            return best;
+            if (nearest == null)
+            {
+                return false;
+            }
+
+            var candidate = ResolveInteractable(nearest);
+
+            if (candidate == null || !candidate.CanInteract)
+            {
+                return false;
+            }
+
+            // Единственная проверка радиуса: от неё зависят и реакция прицела, и обводка,
+            // и возможность нажать, поэтому разойтись они не могут.
+            if (nearestDistance > candidate.InteractionRadius)
+            {
+                return false;
+            }
+
+            target = candidate;
+            return true;
+        }
+
+        /// <summary>
+        /// Находит сценарий по коллайдеру: либо компонент висит выше по иерархии,
+        /// либо на геометрии стоит указатель на сценарий, живущий отдельно.
+        /// </summary>
+        private static Interactable ResolveInteractable(Component collider)
+        {
+            var direct = collider.GetComponentInParent<Interactable>();
+
+            if (direct != null)
+            {
+                return direct;
+            }
+
+            var proxy = collider.GetComponentInParent<InteractableProxy>();
+            return proxy != null ? proxy.Target : null;
+        }
+
+        private void SetFocus(Interactable next)
+        {
+            if (next == _focused)
+            {
+                return;
+            }
+
+            _focused?.OnFocusExit();
+            _focused = next;
+            _focused?.OnFocusEnter();
         }
 
         private void OnDrawGizmosSelected()
         {
-            Gizmos.color = new Color(0.3f, 0.8f, 1f, 0.35f);
-            Gizmos.DrawWireSphere(transform.position + Vector3.up * probeHeight, searchRadius);
+            var camera = ActiveCamera != null ? ActiveCamera : playerCamera;
+
+            if (camera == null)
+            {
+                return;
+            }
+
+            Gizmos.color = new Color(0.3f, 0.8f, 1f, 0.6f);
+            Gizmos.DrawRay(camera.transform.position, camera.transform.forward * aimDistance);
         }
     }
 }

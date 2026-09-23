@@ -1,28 +1,38 @@
+using System;
+using Radio.Interaction.Highlight;
 using UnityEngine;
 
 namespace Radio.Interaction
 {
     /// <summary>
     /// База для всего, с чем игрок может взаимодействовать: кресло, кнопка, ручка, ящик.
-    /// Объект отвечает только за то, что произойдёт; поиск цели, ввод и подсказку
+    /// Объект отвечает только за то, что произойдёт; поиск цели, ввод и прицел
     /// держит <see cref="PlayerInteractor"/> на игроке.
     /// </summary>
     public abstract class Interactable : MonoBehaviour
     {
-        [Header("Подсказка")]
-        [Tooltip("Точка, над которой всплывает подсказка. Если пусто — берётся сам объект. " +
-                 "У блокаутной мебели пивот часто далеко от видимой геометрии, поэтому анкер лучше задавать явно.")]
-        [SerializeField] private Transform promptAnchor;
+        [Header("Взаимодействие")]
+        [Tooltip("Дистанция от глаз игрока, ближе которой объект реагирует на прицел, м. " +
+                 "От неё зависят и реакция прицела, и обводка, и возможность нажать — " +
+                 "они проверяются одним условием и не могут разойтись.")]
+        [SerializeField] private float interactionRadius = 2f;
 
-        [Tooltip("Текст подсказки. Обычно клавиша, но может быть и словом.")]
-        [SerializeField] private string promptText = "F";
+        [Header("Ссылки")]
+        [Tooltip("Подсветка объекта. Если пусто — ищется среди своих компонентов.")]
+        [SerializeField] private InteractableHighlighter highlighter;
 
-        public Transform PromptAnchor => promptAnchor != null ? promptAnchor : transform;
+        [Tooltip("Анимация взаимодействия. Необязательна: без неё действие происходит мгновенно.")]
+        [SerializeField] private InteractionAnimator interactionAnimator;
 
-        public string PromptText => promptText;
+        private bool _playing;
 
-        /// <summary>Доступно ли взаимодействие прямо сейчас: дверь заперта, кассета уже вставлена и т.п.</summary>
-        public virtual bool CanInteract => isActiveAndEnabled;
+        public float InteractionRadius => interactionRadius;
+
+        /// <summary>
+        /// Доступно ли взаимодействие прямо сейчас: дверь заперта, кассета уже вставлена,
+        /// либо ещё играет анимация предыдущего действия.
+        /// </summary>
+        public virtual bool CanInteract => isActiveAndEnabled && !_playing;
 
         /// <summary>
         /// Пока true, игрок считается занятым этим объектом: поиск других целей не идёт,
@@ -32,10 +42,48 @@ namespace Radio.Interaction
 
         public abstract void Interact(PlayerInteractor interactor);
 
-        /// <summary>Объект стал ближайшей целью. Задел под подсветку.</summary>
-        public virtual void OnFocusEnter() { }
+        protected virtual void Awake()
+        {
+            if (highlighter == null)
+            {
+                highlighter = GetComponentInChildren<InteractableHighlighter>();
+            }
+        }
 
-        /// <summary>Объект перестал быть целью.</summary>
-        public virtual void OnFocusExit() { }
+        /// <summary>Объект попал под прицел.</summary>
+        public virtual void OnFocusEnter()
+        {
+            highlighter?.Show();
+        }
+
+        /// <summary>Прицел ушёл с объекта.</summary>
+        public virtual void OnFocusExit()
+        {
+            highlighter?.Hide();
+        }
+
+        /// <summary>
+        /// Проигрывает анимацию взаимодействия и выполняет действие по её окончании.
+        /// Если аниматора нет, действие выполняется сразу — благодаря этому сценарии
+        /// пишутся одинаково и до появления анимаций, и после.
+        /// </summary>
+        protected void PlayThen(string stateName, Action action)
+        {
+            if (interactionAnimator == null)
+            {
+                action();
+                return;
+            }
+
+            // Пока идёт анимация, CanInteract возвращает false: иначе игрок нажмёт
+            // второй раз в середине и запустит действие повторно.
+            _playing = true;
+
+            interactionAnimator.Play(stateName, () =>
+            {
+                _playing = false;
+                action();
+            });
+        }
     }
 }

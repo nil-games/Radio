@@ -20,8 +20,10 @@ namespace Radio.Interaction
         /// <summary>Пока игрок сидит, он занят этим креслом: следующее нажатие поднимет его.</summary>
         public override bool IsExclusive => true;
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
+
             if (seatCamera == null)
             {
                 Debug.LogError($"{nameof(SitPoint)}: не задана камера сидящего. Посадка отключена.", this);

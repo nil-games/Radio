@@ -40,8 +40,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3368818071393415506}
-  - component: {fileID: 1874103384200672877}
   - component: {fileID: 1936314452881985812}
+  - component: {fileID: 3010919322122704910}
   m_Layer: 0
   m_Name: PresenterChairSeat
   m_TagString: Untagged
@@ -63,31 +63,9 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2670857016031304457}
-  - {fileID: 2374626902868002956}
   - {fileID: 1774828273966142361}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1874103384200672877
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2269246498887405290}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.3, y: 1.8, z: 1.2}
-  m_Center: {x: 0.66, y: 0.9, z: 0}
 --- !u!114 &1936314452881985812
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -100,41 +78,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c06cd8d452d48c43a6e0d834d9346b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Radio.Interaction.SitPoint
-  promptAnchor: {fileID: 2374626902868002956}
-  promptText: F
+  interactionRadius: 2
+  highlighter: {fileID: 0}
+  interactionAnimator: {fileID: 0}
   seatCamera: {fileID: 2335737531717266721}
   standUpPoint: {fileID: 0}
---- !u!1 &5327697356975045923
-GameObject:
+--- !u!114 &3010919322122704910
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2374626902868002956}
-  m_Layer: 0
-  m_Name: PromptAnchor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2374626902868002956
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5327697356975045923}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.35, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3368818071393415506}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_GameObject: {fileID: 2269246498887405290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bef09b3bbc548740ba043faae78abad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radio.Interaction.Highlight.OutlineHighlighter
+  visualRoot: {fileID: 0}
+  outlineMaterial: {fileID: 2100000, guid: 44358a236de4a594bb694a216154a3c7, type: 2}
 --- !u!1 &7659928956458601463
 GameObject:
   m_ObjectHideFlags: 0

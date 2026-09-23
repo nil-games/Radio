@@ -76,6 +76,11 @@ namespace Radio.Interaction
                 return;
             }
 
+            // Страхуемся от сцены, сохранённой с выключенной камерой игрока:
+            // такое случается, если её погасили во время теста и сохранились.
+            // Без этого при старте не рендерит ни одна камера.
+            playerCamera.enabled = true;
+
             ActiveCamera = playerCamera;
             _actions = new InputSystem_Actions();
         }

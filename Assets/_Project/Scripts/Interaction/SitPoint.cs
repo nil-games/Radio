@@ -1,3 +1,4 @@
+using Radio.UI;
 using UnityEngine;
 
 namespace Radio.Interaction
@@ -14,6 +15,14 @@ namespace Radio.Interaction
 
         [Tooltip("Куда поставить игрока при вставании. Если пусто, игрок остаётся там, где стоял.")]
         [SerializeField] private Transform standUpPoint;
+
+        [Header("Режим за столом")]
+        [Tooltip("Поворот взгляда между половинами углового стола. Необязателен: " +
+                 "без него кресло просто не поворачивается.")]
+        [SerializeField] private DeskView deskView;
+
+        [Tooltip("Интерфейс режима за столом: стрелки поворота и подсказки.")]
+        [SerializeField] private DeskModeUI deskUI;
 
         private bool _seated;
 
@@ -33,6 +42,76 @@ namespace Radio.Interaction
 
             // Страхуемся от сохранённого в сцене включённого состояния: двух активных камер быть не должно.
             seatCamera.enabled = false;
+
+            if (deskUI != null)
+            {
+                deskUI.TurnLeftRequested += OnTurnLeftRequested;
+                deskUI.TurnRightRequested += OnTurnRightRequested;
+                deskUI.Hide();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (deskUI != null)
+            {
+                deskUI.TurnLeftRequested -= OnTurnLeftRequested;
+                deskUI.TurnRightRequested -= OnTurnRightRequested;
+            }
+        }
+
+        private void OnTurnLeftRequested()
+        {
+            // Клик мог прийти, пока игрок уже встал: панель гасится не мгновенно.
+            if (!_seated || deskView == null)
+            {
+                return;
+            }
+
+            deskView.TurnLeft();
+            RefreshTurnArrows();
+        }
+
+        private void OnTurnRightRequested()
+        {
+            if (!_seated || deskView == null)
+            {
+                return;
+            }
+
+            deskView.TurnRight();
+            RefreshTurnArrows();
+        }
+
+        /// <summary>
+        /// Показывает только тот поворот, который сейчас возможен: половин стола две,
+        /// и предлагать несуществующий ход значит обманывать игрока.
+        /// </summary>
+        private void RefreshTurnArrows()
+        {
+            if (deskUI == null)
+            {
+                return;
+            }
+
+            if (deskView == null)
+            {
+                deskUI.SetTurnAvailability(false, false);
+                return;
+            }
+
+            // Во время поворота прячем обе: повторный клик посреди движения
+            // оборвал бы анимацию на середине.
+            deskUI.SetTurnAvailability(deskView.CanTurnLeft, deskView.CanTurnRight);
+        }
+
+        private void Update()
+        {
+            // Пока идёт поворот, стрелки скрыты — возвращаем их, когда он закончился.
+            if (_seated && deskView != null && !deskView.IsTurning)
+            {
+                RefreshTurnArrows();
+            }
         }
 
         public override void Interact(PlayerInteractor interactor)
@@ -60,10 +139,28 @@ namespace Radio.Interaction
 
             interactor.BeginExclusive(this);
             _seated = true;
+
+            if (deskUI != null)
+            {
+                deskUI.Show();
+                RefreshTurnArrows();
+            }
         }
 
         private void StandUp(PlayerInteractor interactor)
         {
+            if (deskUI != null)
+            {
+                deskUI.Hide();
+            }
+
+            // Возвращаем исходную ориентацию сразу: иначе в следующий раз игрок
+            // сядет лицом ко второй половине стола, хотя подходил к первой.
+            if (deskView != null)
+            {
+                deskView.ResetInstantly();
+            }
+
             seatCamera.enabled = false;
             interactor.PlayerCamera.enabled = true;
             interactor.SetActiveCamera(interactor.PlayerCamera);

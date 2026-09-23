@@ -26,13 +26,6 @@ namespace Radio.UI
         [Tooltip("Время перехода точка-кольцо, с. Короткое: прицел должен читаться мгновенно.")]
         [SerializeField] private float transitionTime = 0.08f;
 
-        [Header("Генерация спрайтов")]
-        [Tooltip("Сторона генерируемой текстуры, px.")]
-        [SerializeField] private int spriteSize = 64;
-
-        [Tooltip("Внутренний радиус кольца, доля от внешнего.")]
-        [SerializeField] private float ringThickness = 0.62f;
-
         private float _progress;
         private bool _focused;
 
@@ -44,12 +37,6 @@ namespace Radio.UI
                 enabled = false;
                 return;
             }
-
-            dot.sprite = UiSpriteFactory.CreateRing(spriteSize, 0f, 1f);
-            ring.sprite = UiSpriteFactory.CreateRing(spriteSize, ringThickness, 1f);
-
-            dot.raycastTarget = false;
-            ring.raycastTarget = false;
 
             ApplyVisual(0f);
         }

@@ -30,6 +30,12 @@ title: Night1_Declarations
 <<declare $STORY_BOSS_CALL_DONE = false>>
 <<declare $STORY_FIRST_BROADCAST_PENDING = false>>
 <<declare $ACTION_ASKED_ABOUT_SERGEY = false>>
+<<declare $STORY_FOUND_SERGEY_JACKET = false>>
+
+// Вычисляемая переменная: Yarn пересчитывает её при каждом чтении. Её имя стоит
+// на самой куртке в поле доступности, поэтому осмотренная вещь перестаёт ловить
+// прицел без единой строчки кода.
+<<declare $jacket_can_examine = not $STORY_FOUND_SERGEY_JACKET>>
 
 // Какие вопросы начальнику уже заданы. Заданный вопрос гаснет в списке,
 // но остаётся виден — так игрок видит, что он тут был, а не гадает.

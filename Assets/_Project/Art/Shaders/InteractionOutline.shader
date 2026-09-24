@@ -6,8 +6,9 @@ Shader "Radio/InteractionOutline"
     Properties
     {
         [HDR] _OutlineColor("Цвет обводки", Color) = (1, 1, 1, 1)
-        _OutlineWidth("Толщина, м", Range(0.001, 0.1)) = 0.015
-        [KeywordEnum(Position, Normal)] _Extrude("Режим выдавливания", Float) = 0
+        _OutlineWidth("Толщина, м (режимы Position и Normal)", Range(0.001, 0.1)) = 0.015
+        _OutlineWidthPixels("Толщина, пикселей (режим Screen)", Range(0.5, 8)) = 1.5
+        [KeywordEnum(Position, Normal, Screen)] _Extrude("Режим выдавливания", Float) = 0
     }
 
     SubShader
@@ -34,7 +35,7 @@ Shader "Radio/InteractionOutline"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma shader_feature_local _EXTRUDE_POSITION _EXTRUDE_NORMAL
+            #pragma shader_feature_local _EXTRUDE_POSITION _EXTRUDE_NORMAL _EXTRUDE_SCREEN
             #pragma multi_compile_instancing
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -43,6 +44,7 @@ Shader "Radio/InteractionOutline"
             CBUFFER_START(UnityPerMaterial)
                 float4 _OutlineColor;
                 float _OutlineWidth;
+                float _OutlineWidthPixels;
                 float _Extrude;
             CBUFFER_END
 
@@ -67,6 +69,37 @@ Shader "Radio/InteractionOutline"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
                 float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+
+                #ifdef _EXTRUDE_SCREEN
+                    // Раздуваем силуэт прямо в пикселях экрана. Два других режима задают
+                    // толщину в метрах, и кайма растёт при приближении: наклонившись к столу,
+                    // игрок получил бы вместо тонкого контура широкую рамку. Здесь толщина
+                    // постоянная, поэтому её можно выставить в полтора пикселя и не думать
+                    // ни о расстоянии, ни о разрешении.
+                    float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+                    float4 positionCS = TransformWorldToHClip(positionWS);
+                    float3 normalCS = mul((float3x3)UNITY_MATRIX_VP, normalWS);
+
+                    // Нормализуем в пикселях, а не в отсечённых координатах: у них разный
+                    // масштаб по осям, и иначе кайма вышла бы толще по вертикали.
+                    float2 directionPixels = float2(normalCS.x * _ScreenParams.x,
+                                                    normalCS.y * _ScreenParams.y);
+                    float lengthSquared = dot(directionPixels, directionPixels);
+
+                    // Нормаль строго на камеру проецируется в точку: такую вершину не двигаем,
+                    // она внутри силуэта и каймы не образует.
+                    if (lengthSquared > 1e-8)
+                    {
+                        directionPixels *= rsqrt(lengthSquared) * _OutlineWidthPixels;
+
+                        // Сдвиг в отсечённых координатах: умножение на w нужно, чтобы после
+                        // деления на него смещение осталось ровно заданным в пикселях.
+                        positionCS.xy += directionPixels * (2.0 / _ScreenParams.xy) * positionCS.w;
+                    }
+
+                    output.positionCS = positionCS;
+                    return output;
+                #endif
 
                 #ifdef _EXTRUDE_NORMAL
                     // Для мешей со сглаженными нормалями — обычное выдавливание по нормали.

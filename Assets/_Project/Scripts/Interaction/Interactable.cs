@@ -17,6 +17,11 @@ namespace Radio.Interaction
                  "они проверяются одним условием и не могут разойтись.")]
         [SerializeField] private float interactionRadius = 2f;
 
+        [Tooltip("Доступен ли предмет, когда игрок просто ходит по комнате. Для приборов на " +
+                 "столе галочку снимают: они работают только в режиме за столом, а обводка " +
+                 "на подходе обещала бы взаимодействие, которого не будет.")]
+        [SerializeField] private bool availableWhileWalking = true;
+
         [Header("Ссылки")]
         [Tooltip("Подсветка объекта. Если пусто — ищется среди своих компонентов.")]
         [SerializeField] private InteractableHighlighter highlighter;
@@ -27,6 +32,9 @@ namespace Radio.Interaction
         private bool _playing;
 
         public float InteractionRadius => interactionRadius;
+
+        /// <summary>Виден ли предмет прицелу, пока игрок ходит, а не сидит за столом.</summary>
+        public bool AvailableWhileWalking => availableWhileWalking;
 
         /// <summary>
         /// Доступно ли взаимодействие прямо сейчас: дверь заперта, кассета уже вставлена,

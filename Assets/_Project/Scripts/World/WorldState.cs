@@ -78,23 +78,29 @@ namespace Radio.World
         /// Читает флаг. Возвращает false, если флага нет или он другого типа;
         /// result при этом равен значению по умолчанию.
         /// </summary>
+        /// <remarks>
+        /// Проверка через is, а не сравнение typeof(T) с bool, float и string:
+        /// Yarn запрашивает значение в том числе как object, и точное сравнение типов
+        /// тогда не совпадает ни с одним из трёх. Флаг молча читается как «пусто»,
+        /// условия в диалогах всегда ложны, а ошибки при этом нет ни одной.
+        /// </remarks>
         public bool TryGet<T>(string name, out T result)
         {
-            if (typeof(T) == typeof(bool) && _bools.TryGetValue(name, out var b))
+            if (_bools.TryGetValue(name, out var b) && b is T asBool)
             {
-                result = (T)(object)b;
+                result = asBool;
                 return true;
             }
 
-            if (typeof(T) == typeof(float) && _numbers.TryGetValue(name, out var f))
+            if (_numbers.TryGetValue(name, out var f) && f is T asNumber)
             {
-                result = (T)(object)f;
+                result = asNumber;
                 return true;
             }
 
-            if (typeof(T) == typeof(string) && _texts.TryGetValue(name, out var s))
+            if (_texts.TryGetValue(name, out var t) && t is T asText)
             {
-                result = (T)(object)s;
+                result = asText;
                 return true;
             }
 

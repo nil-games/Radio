@@ -33,7 +33,14 @@ namespace Radio.Dialogue
 
         [SerializeField] private WorldState world;
 
-        private void Awake()
+        private void Awake() => EnsureReferences();
+
+        /// <summary>
+        /// Доразрешение ссылок по требованию. Одного вызова из Awake мало: порядок Awake
+        /// между объектами Unity не гарантирует, и сессии в этот момент может ещё не быть,
+        /// а хранилище опрашивают с первой же строки диалога.
+        /// </summary>
+        private void EnsureReferences()
         {
             if (time != null && world != null)
             {
@@ -44,8 +51,6 @@ namespace Radio.Dialogue
 
             if (session == null)
             {
-                Debug.LogError($"{nameof(RadioVariableStorage)}: в сцене нет {nameof(GameSession)}, " +
-                               "а ссылки не заданы вручную. Диалоги не увидят состояние игры.", this);
                 return;
             }
 
@@ -55,11 +60,15 @@ namespace Radio.Dialogue
 
         public override bool TryGetValue<T>(string variableName, out T result)
         {
+            EnsureReferences();
+
+            // Через is, а не сравнением typeof(T) с float: Yarn спрашивает значение
+            // и как object тоже, и точное сравнение типов тогда не совпадает.
             if (TryGetReserved(variableName, out var reserved))
             {
-                if (typeof(T) == typeof(float))
+                if (reserved is T asNumber)
                 {
-                    result = (T)(object)reserved;
+                    result = asNumber;
                     return true;
                 }
 
@@ -138,8 +147,11 @@ namespace Radio.Dialogue
             NotifyVariableChanged(variableName, value);
         }
 
-        public override bool Contains(string variableName) =>
-            IsReserved(variableName) || (world != null && world.Contains(StripPrefix(variableName)));
+        public override bool Contains(string variableName)
+        {
+            EnsureReferences();
+            return IsReserved(variableName) || (world != null && world.Contains(StripPrefix(variableName)));
+        }
 
         public override void Clear()
         {
@@ -258,6 +270,8 @@ namespace Radio.Dialogue
         /// </summary>
         private bool RejectWrite(string variableName)
         {
+            EnsureReferences();
+
             if (IsReserved(variableName))
             {
                 Debug.LogError($"{nameof(RadioVariableStorage)}: {variableName} менять из диалога нельзя. " +

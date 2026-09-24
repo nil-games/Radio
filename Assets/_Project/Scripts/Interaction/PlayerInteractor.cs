@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Radio.Player;
 using Radio.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 namespace Radio.Interaction
@@ -137,8 +138,20 @@ namespace Radio.Interaction
                 // голова сидящего игрока не поворачивается, и целиться ею не получится.
                 SetFocus(TryFindTargetUnderCursor(out var seated) ? seated : null);
 
-                if (pressed)
+                // За столом предметы выбирают мышью. Клик по интерфейсу сюда не доходит:
+                // иначе нажатие на стрелку поворота заодно трогало бы предмет под ней.
+                var mouse = Mouse.current;
+                var clicked = mouse != null
+                              && mouse.leftButton.wasPressedThisFrame
+                              && !IsPointerOverUI();
+
+                if (clicked && _focused != null)
                 {
+                    _focused.Interact(this);
+                }
+                else if (pressed)
+                {
+                    // Клавиша взаимодействия по-прежнему поднимает из кресла.
                     _busyWith.Interact(this);
                 }
 
@@ -174,6 +187,9 @@ namespace Radio.Interaction
         /// Ищет цель вдоль луча. Луч передаётся параметром, чтобы в режиме сидя
         /// сюда же можно было отдать ScreenPointToRay от курсора.
         /// </summary>
+        private static bool IsPointerOverUI() =>
+            EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+
         /// <summary>
         /// Ищет цель под курсором. Нужен в режиме за столом, где курсор свободен.
         /// </summary>
@@ -252,6 +268,13 @@ namespace Radio.Interaction
                 // Всё остальное ближайшее решает исход: непригодный предмет или стена
                 // именно что заслоняют цель, и искать за ними нечего.
                 if (candidate == null || !candidate.CanInteract)
+                {
+                    return false;
+                }
+
+                // Приборы на столе работают только в режиме за столом. Пока игрок ходит
+                // по комнате, они не должны ни подсвечиваться, ни нажиматься.
+                if (_busyWith == null && !candidate.AvailableWhileWalking)
                 {
                     return false;
                 }

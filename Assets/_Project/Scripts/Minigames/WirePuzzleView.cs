@@ -53,8 +53,12 @@ namespace Radio.Minigames
         /// <summary>Сторона клетки вместе с зазором — шаг сетки.</summary>
         private float Step => cellSize + cellGap;
 
-        /// <summary>Собирает поле под конкретный уровень. Можно звать повторно.</summary>
-        public void Build(WirePuzzle puzzle)
+        /// <summary>
+        /// Собирает поле под готовый путь. Путь приходит снаружи, а не строится здесь:
+        /// он случайный, и построенный второй раз разошёлся бы с тем, по которому
+        /// на самом деле бежит сигнал.
+        /// </summary>
+        public void Build(IReadOnlyList<Vector2> path)
         {
             if (board == null || font == null)
             {
@@ -73,7 +77,7 @@ namespace Radio.Minigames
 
             BuildKeys();
 
-            if (puzzle != null && puzzle.TryBuildPath(out var path, out _))
+            if (path != null && path.Count >= 2)
             {
                 BuildWire(path);
                 BuildPoints(path);

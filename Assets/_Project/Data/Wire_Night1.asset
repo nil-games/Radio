@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d574d90078988f4b9bc658cd63850da, type: 3}
   m_Name: Wire_Night1
   m_EditorClassIdentifier: Assembly-CSharp::Radio.Minigames.WirePuzzle
-  waypoints: 290000002d00000011000000070000001a00000005000000
-  speed: 3
+  pointCount: 5
+  speed: 2
   hitWindow: 0.25
+  source: 0
+  minStep: 2.5
+  maxStep: 7
+  seed: 0
+  waypoints: 290000002d00000011000000070000001a00000005000000
   finishDelay: 0.8

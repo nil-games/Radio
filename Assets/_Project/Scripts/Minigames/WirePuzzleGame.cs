@@ -63,14 +63,14 @@ namespace Radio.Minigames
                 return;
             }
 
-            if (!puzzle.TryBuildPath(out _path, out _keys))
+            if (!puzzle.TryCreatePath(out _path, out _keys))
             {
-                Debug.LogError($"{nameof(WirePuzzleGame)}: в проводе меньше двух клеток.", this);
+                Debug.LogError($"{nameof(WirePuzzleGame)}: провод не собрался.", this);
                 return;
             }
 
             MeasurePath();
-            view.Build(puzzle);
+            view.Build(_path);
             Restart();
         }
 

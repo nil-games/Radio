@@ -4,20 +4,18 @@ using UnityEngine;
 namespace Radio.Dialogue
 {
     /// <summary>
-    /// Телефон на столе. Отвечает на нажатие, только пока звонит:
-    /// снятая трубка обрывает звонок и начинает разговор.
+    /// Телефон на столе. Снятая трубка обрывает звонок и начинает разговор.
     /// </summary>
+    /// <remarks>
+    /// Аппарат доступен всегда, а не только пока звонит: молчащий телефон,
+    /// который нельзя даже взять, читается как сломанный. Что окажется в трубке,
+    /// решает сам узел Yarn — если никто не звонит, в ней гудки.
+    /// </remarks>
     public sealed class PhoneInteractable : DialogueInteractable
     {
         [Header("Телефон")]
         [Tooltip("Если пусто, ищется на этом же объекте.")]
         [SerializeField] private PhoneRinger ringer;
-
-        /// <summary>
-        /// Молчащий телефон не подсвечивается и не нажимается: обводка на нём
-        /// обещала бы разговор, которого не будет.
-        /// </summary>
-        public override bool CanInteract => base.CanInteract && ringer != null && ringer.IsRinging;
 
         protected override void Awake()
         {
@@ -30,15 +28,17 @@ namespace Radio.Dialogue
 
             if (ringer == null)
             {
-                Debug.LogError($"{nameof(PhoneInteractable)}: не найден {nameof(PhoneRinger)}. " +
-                               "Телефон никогда не станет доступен.", this);
+                // Не ошибка: телефон без звонка работает, просто никогда не звонит.
+                Debug.LogWarning($"{nameof(PhoneInteractable)}: не найден {nameof(PhoneRinger)}, " +
+                                 "аппарат звонить не будет.", this);
             }
         }
 
         public override void Interact(PlayerInteractor interactor)
         {
             // Звонок обрываем до начала разговора, а не после: иначе первая реплика
-            // прозвучала бы поверх звонящего телефона.
+            // прозвучала бы поверх звонящего телефона. Если телефон молчал,
+            // вызов ничего не делает.
             if (ringer != null)
             {
                 ringer.StopRinging();

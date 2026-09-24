@@ -32,9 +32,15 @@ namespace Radio.Interaction
         /// <summary>Идёт ли поворот прямо сейчас.</summary>
         public bool IsTurning => _progress < 1f;
 
-        public bool CanTurnLeft => !IsTurning && _position == 0;
+        /// <summary>
+        /// Пока true, поворот запрещён и стрелки гаснут сами: камеру забрал кто-то
+        /// другой — например, игрок смотрит в монитор.
+        /// </summary>
+        public bool Locked { get; set; }
 
-        public bool CanTurnRight => !IsTurning && _position == 1;
+        public bool CanTurnLeft => !Locked && !IsTurning && _position == 0;
+
+        public bool CanTurnRight => !Locked && !IsTurning && _position == 1;
 
         private void Awake()
         {

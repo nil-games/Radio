@@ -31,6 +31,7 @@ title: Night1_Declarations
 <<declare $STORY_FIRST_BROADCAST_PENDING = false>>
 <<declare $ACTION_ASKED_ABOUT_SERGEY = false>>
 <<declare $STORY_FOUND_SERGEY_JACKET = false>>
+<<declare $STORY_FIRST_BROADCAST_STARTED = false>>
 
 // Вычисляемая переменная: Yarn пересчитывает её при каждом чтении. Её имя стоит
 // на самой куртке в поле доступности, поэтому осмотренная вещь перестаёт ловить

@@ -47,6 +47,9 @@ title: Mixer_Channels
     <<jump Mixer_ChannelStub>>
 -> LINE — линейный вход
     <<jump Mixer_ChannelStub>>
+-> Начать эфир.
+    Микшер: Лампа загорается. Сигнал уходит в провод.
+    <<start_minigame wire>>
 -> Отойти от пульта.
 ===
 

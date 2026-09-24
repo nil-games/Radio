@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Radio.Player
@@ -39,7 +40,9 @@ namespace Radio.Player
         private Vector3 _horizontalVelocity;
         private float _verticalVelocity;
         private float _pitch;
-        private bool _suspended;
+        // Владельцы приостановки, а не флаг: за столом её держит кресло, и начатый там
+        // диалог, закрывшись, вернул бы управление всё ещё сидящему игроку.
+        private readonly HashSet<object> _suspendRequests = new HashSet<object>();
 
         private void Awake()
         {
@@ -68,7 +71,7 @@ namespace Radio.Player
         private void OnEnable()
         {
             _actions?.Player.Enable();
-            SetCursorLocked(!_suspended);
+            SetCursorLocked(!IsSuspended);
         }
 
         private void OnDisable()
@@ -83,22 +86,39 @@ namespace Radio.Player
         }
 
         /// <summary>Приостановлено ли управление: игрок сидит, смотрит в меню и т.п.</summary>
-        public bool IsSuspended => _suspended;
+        public bool IsSuspended => _suspendRequests.Count > 0;
 
         /// <summary>
-        /// Приостанавливает ходьбу и обзор, не выключая компонент.
-        /// enabled = false здесь не годится: OnDisable снял бы всю карту Player вместе
+        /// Просит приостановить ходьбу и обзор. Компонент при этом не выключается:
+        /// enabled = false здесь не годится, OnDisable снял бы всю карту Player вместе
         /// с действием Interact, которым игрок и выходит обратно.
         /// </summary>
-        public void SetSuspended(bool suspended)
+        public void AddSuspendRequest(object owner)
         {
-            if (_suspended == suspended)
+            if (owner == null || !_suspendRequests.Add(owner) || _suspendRequests.Count != 1)
             {
                 return;
             }
 
-            _suspended = suspended;
+            ApplySuspension(true);
+        }
 
+        /// <summary>
+        /// Владелец отпускает управление. Оно вернётся только когда отпустят все:
+        /// диалог за столом не должен поднимать игрока из кресла.
+        /// </summary>
+        public void RemoveSuspendRequest(object owner)
+        {
+            if (owner == null || !_suspendRequests.Remove(owner) || _suspendRequests.Count != 0)
+            {
+                return;
+            }
+
+            ApplySuspension(false);
+        }
+
+        private void ApplySuspension(bool suspended)
+        {
             // Гасим инерцию: иначе после вставания персонаж доедет разгон, набранный до посадки.
             _horizontalVelocity = Vector3.zero;
             _verticalVelocity = suspended ? 0f : -2f;
@@ -108,7 +128,7 @@ namespace Radio.Player
 
         private void Update()
         {
-            if (_suspended)
+            if (IsSuspended)
             {
                 return;
             }

@@ -5,6 +5,7 @@
       "url": "https://package.openupm.com",
       "scopes": [
         "com.ivanmurzak",
+        "dev.yarnspinner",
         "extensions.unity",
         "org.nuget"
       ]
@@ -23,6 +24,7 @@
     "com.unity.test-framework": "1.6.0",
     "com.unity.timeline": "1.8.11",
     "com.unity.ugui": "2.0.0",
-    "com.unity.visualscripting": "1.9.11"
+    "com.unity.visualscripting": "1.9.11",
+    "dev.yarnspinner.unity": "3.2.8"
   }
 }

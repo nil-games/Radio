@@ -35,6 +35,7 @@ MonoBehaviour:
     m_Url: https://package.openupm.com
     m_Scopes:
     - com.ivanmurzak
+    - dev.yarnspinner
     - extensions.unity
     - org.nuget
     m_IsDefault: 0

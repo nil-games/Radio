@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using Radio.Player;
 using Radio.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Radio.Interaction
 {
@@ -23,6 +25,10 @@ namespace Radio.Interaction
         private InputSystem_Actions _actions;
         private Interactable _focused;
         private Interactable _busyWith;
+
+        // Кто сейчас запрещает наводиться и нажимать. Набор, а не флаг: запретов
+        // может быть несколько сразу, и снявший свой не должен отпускать чужой.
+        private readonly HashSet<object> _inputBlocks = new HashSet<object>();
 
         // Камера сидит внутри капсулы CharacterController, поэтому луч регулярно
         // задевает самого игрока и нужно перебрать попадания, а не брать первое.
@@ -47,6 +53,15 @@ namespace Radio.Interaction
 
         /// <summary>Объект забирает игрока себе: поиск других целей прекращается.</summary>
         public void BeginExclusive(Interactable owner) => _busyWith = owner;
+
+        /// <summary>
+        /// Полностью запретить прицеливание и нажатия: игрок разговаривает и отвечает мышью.
+        /// Отличается от BeginExclusive тем, что не передаёт нажатие никому.
+        /// </summary>
+        public void AddInputBlock(object owner) => _inputBlocks.Add(owner);
+
+        /// <summary>Снять свой запрет. Ввод вернётся, когда снимут все.</summary>
+        public void RemoveInputBlock(object owner) => _inputBlocks.Remove(owner);
 
         /// <summary>Объект отпускает игрока.</summary>
         public void EndExclusive(Interactable owner)
@@ -103,12 +118,24 @@ namespace Radio.Interaction
             // забрал игрока себе, тут же получил бы второе нажатие — игрок сел бы и сразу встал.
             var pressed = _actions.Player.Interact.WasPressedThisFrame();
 
+            if (_inputBlocks.Count > 0)
+            {
+                // Нажатие здесь намеренно проглатывается: во время разговора клавиша
+                // взаимодействия не должна поднимать игрока из кресла.
+                SetFocus(null);
+                crosshair.SetVisible(false);
+                return;
+            }
+
             if (_busyWith != null)
             {
                 // В режиме сидения курсор свободен, и неподвижный прицел в центре экрана
-                // означал бы неправду: наводиться им уже нельзя.
-                SetFocus(null);
+                // означал бы неправду: наводятся мышью.
                 crosshair.SetVisible(false);
+
+                // Подсветка приборов на столе идёт от курсора, а не от направления взгляда:
+                // голова сидящего игрока не поворачивается, и целиться ею не получится.
+                SetFocus(TryFindTargetUnderCursor(out var seated) ? seated : null);
 
                 if (pressed)
                 {
@@ -147,6 +174,34 @@ namespace Radio.Interaction
         /// Ищет цель вдоль луча. Луч передаётся параметром, чтобы в режиме сидя
         /// сюда же можно было отдать ScreenPointToRay от курсора.
         /// </summary>
+        /// <summary>
+        /// Ищет цель под курсором. Нужен в режиме за столом, где курсор свободен.
+        /// </summary>
+        private bool TryFindTargetUnderCursor(out Interactable target)
+        {
+            target = null;
+
+            var camera = ActiveCamera;
+            var mouse = Mouse.current;
+
+            if (camera == null || mouse == null)
+            {
+                return false;
+            }
+
+            var screenPoint = mouse.position.ReadValue();
+
+            // Курсор, уведённый за край окна, дал бы луч мимо экрана и подсветил бы
+            // случайный предмет за кадром.
+            if (screenPoint.x < 0f || screenPoint.y < 0f
+                || screenPoint.x > Screen.width || screenPoint.y > Screen.height)
+            {
+                return false;
+            }
+
+            return TryFindTarget(camera.ScreenPointToRay(screenPoint), out target);
+        }
+
         private bool TryFindTarget(Ray ray, out Interactable target)
         {
             target = null;
@@ -161,46 +216,58 @@ namespace Radio.Interaction
                 return false;
             }
 
-            // RaycastNonAlloc не сортирует, поэтому ближайшее ищем сами — заодно
-            // пропуская собственную капсулу игрока, внутри которой начинается луч.
-            var nearestDistance = float.MaxValue;
-            Collider nearest = null;
+            // RaycastNonAlloc порядок не гарантирует, а нам важно именно ближайшее:
+            // попаданий не больше восьми, поэтому сортировка вставками здесь дешевле любой другой.
+            for (var i = 1; i < count; i++)
+            {
+                var moved = _hits[i];
+                var j = i - 1;
+
+                while (j >= 0 && _hits[j].distance > moved.distance)
+                {
+                    _hits[j + 1] = _hits[j];
+                    j--;
+                }
+
+                _hits[j + 1] = moved;
+            }
 
             for (var i = 0; i < count; i++)
             {
+                // Собственная капсула игрока: луч начинается внутри неё.
                 if (_hits[i].collider.transform.IsChildOf(transform))
                 {
                     continue;
                 }
 
-                if (_hits[i].distance < nearestDistance)
+                var candidate = ResolveInteractable(_hits[i].collider);
+
+                // Кресло, в котором игрок сидит, стол не загораживает: он в нём сидит,
+                // а не смотрит на него. Иначе за столом подсвечивалось бы только кресло.
+                if (candidate != null && candidate == _busyWith)
                 {
-                    nearestDistance = _hits[i].distance;
-                    nearest = _hits[i].collider;
+                    continue;
                 }
+
+                // Всё остальное ближайшее решает исход: непригодный предмет или стена
+                // именно что заслоняют цель, и искать за ними нечего.
+                if (candidate == null || !candidate.CanInteract)
+                {
+                    return false;
+                }
+
+                // Единственная проверка радиуса: от неё зависят и реакция прицела, и обводка,
+                // и возможность нажать, поэтому разойтись они не могут.
+                if (_hits[i].distance > candidate.InteractionRadius)
+                {
+                    return false;
+                }
+
+                target = candidate;
+                return true;
             }
 
-            if (nearest == null)
-            {
-                return false;
-            }
-
-            var candidate = ResolveInteractable(nearest);
-
-            if (candidate == null || !candidate.CanInteract)
-            {
-                return false;
-            }
-
-            // Единственная проверка радиуса: от неё зависят и реакция прицела, и обводка,
-            // и возможность нажать, поэтому разойтись они не могут.
-            if (nearestDistance > candidate.InteractionRadius)
-            {
-                return false;
-            }
-
-            target = candidate;
-            return true;
+            return false;
         }
 
         /// <summary>

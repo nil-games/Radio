@@ -129,7 +129,7 @@ namespace Radio.Interaction
         private void SitDown(PlayerInteractor interactor)
         {
             // Курсором владеет контроллер: он же его и освобождает.
-            interactor.Movement.SetSuspended(true);
+            interactor.Movement.AddSuspendRequest(this);
 
             // Порядок важен: сперва гасим старую камеру, потом зажигаем новую.
             // Иначе будет кадр с двумя активными MainCamera и недетерминированный Camera.main.
@@ -171,7 +171,7 @@ namespace Radio.Interaction
             }
 
             // Наклон камеры контроллер восстановит сам на следующем кадре из своего _pitch.
-            interactor.Movement.SetSuspended(false);
+            interactor.Movement.RemoveSuspendRequest(this);
 
             interactor.EndExclusive(this);
             _seated = false;

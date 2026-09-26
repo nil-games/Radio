@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 945380a30a3a2654abdc929ac5556431, type: 3}
+  m_Name: RadioStations
+  m_EditorClassIdentifier: Assembly-CSharp::Radio.Interaction.RadioStationList
+  noise: {fileID: 8300000, guid: e648b1b7f60a403418e9ab7b9037aca8, type: 3}
+  captureWidth: 0.6
+  clearWidth: 0.05
+  folder: Assets/_Project/Audio/Music/RadioMusic
+  stations:
+  - name: "\u0410\u0432\u0442\u043E\u0440\u0430\u0434\u0438\u043E"
+    frequency: 90.3
+    clips: []
+  - name: "\u041D\u043E\u0432\u043E\u0441\u0442\u0438"
+    frequency: 91.2
+    clips: []
+  - name: "\u0421\u0435\u0440\u0435\u0431\u0440\u044F\u043D\u044B\u0439 \u0434\u043E\u0436\u0434\u044C"
+    frequency: 100.1
+    clips:
+    - {fileID: 8300000, guid: 56cd44b042c7e2b4188a42732024408c, type: 3}
+  - name: "\u041D\u0430\u0448\u0435 \u0440\u0430\u0434\u0438\u043E"
+    frequency: 101.7
+    clips:
+    - {fileID: 8300000, guid: 4b13d226bfdb78544ad7ef901c36e9ee, type: 3}
+  - name: "\u0420\u0443\u0441\u0441\u043A\u043E\u0435 \u0440\u0430\u0434\u0438\u043E"
+    frequency: 105.7
+    clips:
+    - {fileID: 8300000, guid: 4e355a4ef66ebaf478584fc0a7c56c22, type: 3}
+  - name: "\u0415\u0432\u0440\u043E\u043F\u0430 \u041F\u043B\u044E\u0441"
+    frequency: 106.2
+    clips:
+    - {fileID: 8300000, guid: 4f09a46f644c1b848b98eb8aeedfd4d0, type: 3}

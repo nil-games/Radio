@@ -16,11 +16,13 @@ namespace Radio.EditorTools
         public const float Width = 10.35f;
         public const float Depth = 7.45f;
         public const float Height = 2.7f;
+        public const float ExpandedWidth = 11.35f;
+        public const float ExpandedDepth = 8.45f;
         private const string MaterialFolder = "Assets/_Project/Materials/ApartmentBlockout";
         private static readonly Dictionary<string, Material> Materials = new Dictionary<string, Material>();
 
         // Plan coordinates: x from exterior west edge, d from exterior north edge, in metres.
-        // World origin is the apartment centre; north is +Z and finished floor is Y=0.
+        // Preserve the original plan origin after expansion; north is +Z and finished floor is Y=0.
         private static Vector3 Plan(float x, float y, float d)
         {
             return new Vector3(x - Width / 2f, y, Depth / 2f - d);
@@ -63,6 +65,7 @@ namespace Radio.EditorTools
                 Viewpoint(viewpoints, "Entrance_EyeLevel", 9.85f, 1.65f, 6.5f, 4.8f, 1.5f, 6.5f);
                 var north = Group(viewpoints, "North_+Z");
                 north.localPosition = Plan(Width / 2f, 0, 0);
+                ApplyRoomShift(root.transform);
                 ConfigureOverview(scene);
                 PrefabUtility.SaveAsPrefabAssetAndConnect(root, PrefabPath, InteractionMode.UserAction);
                 AssetDatabase.SaveAssets();
@@ -73,7 +76,7 @@ namespace Radio.EditorTools
                 if (SceneView.lastActiveSceneView != null)
                     SceneView.lastActiveSceneView.LookAt(new Vector3(0, .3f, 0), Quaternion.Euler(65, 0, 0), 9, true, true);
                 Undo.CollapseUndoOperations(undoGroup);
-                Debug.Log("Apartment blockout built: 10.35 x 7.45 m, wall height 2.70 m. Ceiling disabled for overview.");
+                Debug.Log("Apartment blockout built: 11.35 x 8.45 m; bedroom remains 3.30 x 5.40 m; kitchen passage 2.00 m.");
             }
             catch
             {
@@ -476,6 +479,110 @@ namespace Radio.EditorTools
             camera.farClipPlane = 50;
         }
 
+        [MenuItem("Radio/Apartment/Expand corridors preserving room sizes")]
+        public static void ExpandCorridors()
+        {
+            var scene = SceneManager.GetActiveScene();
+            if (scene.path != ScenePath || EditorApplication.isPlaying || scene.isDirty)
+                throw new InvalidOperationException("Open the saved Apartment scene in Edit Mode.");
+            var root = GameObject.Find(RootName);
+            if (root == null) throw new InvalidOperationException("Apartment blockout missing.");
+            if (root.transform.Find("01_Architecture/Floors/Foundation_11350x8450") != null)
+                throw new InvalidOperationException("Corridor expansion has already been applied.");
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Expand apartment corridors");
+            Undo.RegisterFullObjectHierarchyUndo(root, "Shift rooms without resizing");
+            ApplyRoomShift(root.transform);
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                PrefabUtility.RecordPrefabInstancePropertyModifications(t);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(t.gameObject);
+            }
+            ConfigureOverview(scene);
+            PrefabUtility.ApplyPrefabInstance(root, InteractionMode.UserAction);
+            AssetDatabase.SaveAssets();
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene))
+                throw new InvalidOperationException("Could not save the expanded apartment.");
+            Undo.CollapseUndoOperations(group);
+        }
+
+        private static void ApplyRoomShift(Transform root)
+        {
+            var floors = root.Find("01_Architecture/Floors");
+            var foundation = floors.Find("Foundation_10350x7450");
+            if (foundation == null) throw new InvalidOperationException("Expected original apartment footprint.");
+            foundation.name = "Foundation_11350x8450";
+            foundation.localPosition += new Vector3(-.5f, 0, -.5f);
+            foundation.localScale = new Vector3(ExpandedWidth, foundation.localScale.y, ExpandedDepth);
+            var finished = floors.Find("FinishedFloor_Y0");
+            finished.localPosition += new Vector3(-.5f, 0, -.5f);
+            finished.localScale = new Vector3(ExpandedWidth - .4f, finished.localScale.y, ExpandedDepth - .4f);
+            for (int row = 0; row < 29; row++)
+                for (int column = 0; column < 6; column++)
+                {
+                    var board = floors.Find("Board_" + row + "_" + column);
+                    float w = (ExpandedWidth - .4f) / 6;
+                    float d = (ExpandedDepth - .4f) / 29;
+                    board.localPosition = Plan(-.8f + (column + .5f) * w, -.003f, .2f + (row + .5f) * d);
+                    board.localScale = new Vector3(w - .008f, .006f, d - .005f);
+                }
+            foreach (Transform t in root.Find("01_Architecture/Exterior_200mm"))
+            {
+                if (t.name.StartsWith("West"))
+                {
+                    t.localPosition += Vector3.left;
+                    ExtendSouth(t);
+                }
+                else if (t.name.StartsWith("South"))
+                {
+                    t.localPosition += new Vector3(-.5f, 0, -1);
+                    t.localScale += Vector3.right;
+                }
+                else if (t.name.StartsWith("East_S")) ExtendSouth(t);
+                else if (t.name.StartsWith("North_Pier_0") || t.name.StartsWith("North_Pier_2")
+                    || t.name.StartsWith("StudioWindow") || t.name.StartsWith("BedroomWindow"))
+                    t.localPosition += Vector3.left;
+                else if (t.name.StartsWith("North_Pier_4"))
+                {
+                    t.localPosition += Vector3.left * .5f;
+                    t.localScale += Vector3.right;
+                }
+            }
+            foreach (Transform t in root.Find("01_Architecture/Partitions_150mm"))
+            {
+                if (t.name.StartsWith("Studio_") || t.name.StartsWith("Bedroom_")
+                    || t.name.StartsWith("Storage_SouthWest") || t.name == "Storage_800x2100")
+                    t.localPosition += Vector3.left;
+                if (t.name.StartsWith("Studio_SouthStub") || t.name.StartsWith("Storage_SouthWest_E2"))
+                    ExtendSouth(t);
+            }
+            // Whole rooms translate rigidly: no furniture or bedroom dimensions are reduced.
+            root.Find("02_RadioStudio_3500mm").localPosition += Vector3.left;
+            root.Find("03_Bedroom_3300x5400mm").localPosition += Vector3.left;
+            var storage = root.Find("06_StorageAndHall");
+            storage.Find("PantryFridge").localPosition += new Vector3(-1, 0, -1);
+            storage.Find("PantryShelves").localPosition += Vector3.left;
+            storage.Find("HallShoeCabinet").localPosition += new Vector3(-1, 0, -1);
+            storage.Find("HallRunner").localPosition += new Vector3(-.5f, 0, -.5f);
+            storage.Find("StudioEntryMat").localPosition += new Vector3(-1, 0, -.5f);
+            var ceiling = root.Find("07_Ceiling_ENABLE_for_interior/Ceiling_2700mm");
+            ceiling.localPosition += new Vector3(-.5f, 0, -.5f);
+            ceiling.localScale = new Vector3(ExpandedWidth, ceiling.localScale.y, ExpandedDepth);
+            var lights = root.Find("08_InteriorLighting");
+            lights.Find("WarmRoomLight_0").localPosition += Vector3.left;
+            lights.Find("WarmRoomLight_1").localPosition += Vector3.left;
+            lights.Find("WarmRoomLight_4").localPosition += new Vector3(-.5f, 0, -.5f);
+            root.Find("09_Viewpoints/RadioDesk_EyeLevel").localPosition += Vector3.left;
+        }
+
+        private static void ExtendSouth(Transform t)
+        {
+            t.localPosition += Vector3.back * .5f;
+            t.localScale += Vector3.forward;
+        }
+
         [MenuItem("Radio/Apartment/Validate blockout")]
         public static void ValidateMenu()
         {
@@ -492,10 +599,21 @@ namespace Radio.EditorTools
             if (root.transform.position != Vector3.zero || root.transform.localScale != Vector3.one
                 || Quaternion.Angle(root.transform.rotation, Quaternion.identity) > .001f)
                 errors.Add("Root must have identity transform at world origin.");
-            var foundation = root.transform.Find("01_Architecture/Floors/Foundation_10350x7450");
+            var foundation = root.transform.Find("01_Architecture/Floors/Foundation_11350x8450");
             var size = foundation.GetComponent<Renderer>().bounds.size;
-            if (Mathf.Abs(size.x - Width) > .001f || Mathf.Abs(size.z - Depth) > .001f)
-                errors.Add("Footprint differs from 10.35 x 7.45 m.");
+            if (Mathf.Abs(size.x - ExpandedWidth) > .001f || Mathf.Abs(size.z - ExpandedDepth) > .001f)
+                errors.Add("Footprint differs from 11.35 x 8.45 m.");
+            var partitions = root.transform.Find("01_Architecture/Partitions_150mm");
+            var west = partitions.Find("Studio_Bedroom").GetComponent<Renderer>().bounds;
+            var east = partitions.Find("Bedroom_Living").GetComponent<Renderer>().bounds;
+            var south = partitions.Find("Bedroom_SouthL").GetComponent<Renderer>().bounds;
+            var north = root.transform.Find("01_Architecture/Exterior_200mm/BedroomWindow_1700/BelowSill").GetComponent<Renderer>().bounds;
+            var bathroom = partitions.Find("Bathroom_W1").GetComponent<Renderer>().bounds;
+            if (Mathf.Abs(east.min.x - west.max.x - 3.3f) > .001f
+                || Mathf.Abs(north.min.z - south.max.z - 5.4f) > .001f)
+                errors.Add("Bedroom clear dimensions must remain 3.30 x 5.40 m.");
+            if (Mathf.Abs(bathroom.min.x - east.max.x - 2f) > .001f)
+                errors.Add("Kitchen passage clear width must be 2.00 m.");
             foreach (var transform in root.GetComponentsInChildren<Transform>(true))
                 if (GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(transform.gameObject) > 0)
                     errors.Add("Missing script: " + transform.name);
@@ -507,16 +625,19 @@ namespace Radio.EditorTools
             // A 0.5 m diameter, 1.8 m tall capsule samples connected routes every <= 10 cm.
             // This checks the actual colliders, not just the intended floorplan coordinates.
             float[][] paths = {
-                new[] {10.55f, 6.5f, 3.05f, 6.5f},
-                new[] {3.05f, 6.5f, 3.05f, 1.4f},
-                new[] {3.05f, 6.6f, 1.65f, 6.6f},
-                new[] {5.5f, 6.5f, 5.5f, 5.05f},
-                new[] {5.5f, 5.05f, 5.1f, 5.05f},
-                new[] {5.1f, 5.05f, 5.1f, 1.15f},
+                new[] {10.55f, 6.5f, 2.05f, 6.5f},
+                new[] {2.05f, 6.5f, 2.05f, 1.4f},
+                new[] {2.05f, 6.6f, .65f, 6.6f},
+                new[] {4.5f, 6.5f, 4.5f, 5.05f},
+                new[] {4.5f, 5.05f, 4.1f, 5.05f},
+                new[] {4.1f, 5.05f, 4.1f, 1.15f},
                 new[] {7.8f, 6.5f, 7.8f, 2.15f},
                 new[] {7.8f, 3.85f, 9.15f, 3.85f},
                 new[] {7.8f, 5.1f, 9.25f, 5.1f},
-                new[] {7.8f, 2.15f, 8.75f, 2.15f}
+                new[] {7.8f, 2.15f, 8.75f, 2.15f},
+                new[] {6.65f, 6.5f, 6.65f, 1.8f},
+                new[] {7.3f, 6.5f, 7.3f, 1.8f},
+                new[] {3.9f, 7.55f, 9.4f, 7.55f}
             };
             Physics.SyncTransforms();
             int samples = 0;
@@ -539,8 +660,8 @@ namespace Radio.EditorTools
                 }
             }
             if (errors.Count > 0) throw new InvalidOperationException(string.Join("\n", errors));
-            return "PASS: identity root, 10.35 x 7.45 m footprint, persistent materials, no missing scripts; "
-                + samples + " capsule/floor samples across 10 connected routes passed (0.50 m diameter, 1.80 m height).";
+            return "PASS: identity root, 11.35 x 8.45 m footprint, bedroom 3.30 x 5.40 m, kitchen passage 2.00 m, persistent materials, no missing scripts; "
+                + samples + " capsule/floor samples across 13 connected routes passed (0.50 m diameter, 1.80 m height).";
         }
 
         private static void ConfigureOverview(Scene scene)
@@ -551,10 +672,10 @@ namespace Radio.EditorTools
                 if (camera != null && go.CompareTag("MainCamera"))
                 {
                     Undo.RecordObjects(new UnityEngine.Object[] { camera, camera.transform }, "Frame apartment overview");
-                    camera.transform.position = new Vector3(0, 16, 0);
+                    camera.transform.position = new Vector3(-.5f, 16, -.5f);
                     camera.transform.rotation = Quaternion.Euler(90, 0, 0);
                     camera.orthographic = true;
-                    camera.orthographicSize = 4.65f;
+                    camera.orthographicSize = 5.1f;
                     camera.nearClipPlane = .1f;
                     camera.farClipPlane = 50;
                     camera.clearFlags = CameraClearFlags.SolidColor;

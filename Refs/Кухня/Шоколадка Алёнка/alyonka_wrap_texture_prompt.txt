@@ -1,0 +1,5 @@
+UV-friendly wrapper texture derived from alyonka_front_texture.png.
+
+Canvas: square 4096×4096 pixels. Preserve the existing 1024×2048 front artwork exactly, without regenerating, repainting, cropping, scaling or changing any lettering. Place it exactly in the center. Fill all remaining space with the matching warm creamy-yellow wrapper color: 1536 pixels on the left and right, and 1024 pixels above and below. The large yellow area serves as material for the side, top, bottom and rear surfaces of a rectangular chocolate-bar primitive. No white areas, transparency, shadows, borders or extra graphics.
+
+UV layout: the centered front label occupies 25% of the canvas width and 50% of its height, surrounded by a very large continuous yellow field. Base-color/albedo texture with no baked lighting.

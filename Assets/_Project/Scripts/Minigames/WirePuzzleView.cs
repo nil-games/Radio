@@ -36,6 +36,19 @@ namespace Radio.Minigames
         [Tooltip("Толщина провода, пикселей.")]
         [SerializeField] private float wireThickness = 10f;
 
+        [Header("Маячок")]
+        [Tooltip("Картинка бегущего маячка. Пусто — вместо неё цветной прямоугольник.")]
+        [SerializeField] private Sprite beaconSprite;
+
+        [Tooltip("Размер картинки маячка в долях клетки. Пропорции картинки сохраняются.")]
+        [SerializeField] private float beaconSize = 0.9f;
+
+        [Tooltip("Насколько сжимается маячок при нажатии клавиши: 0.8 — до 80% размера.")]
+        [SerializeField] private float pressScale = 0.8f;
+
+        [Tooltip("За сколько секунд маячок возвращается к прежнему размеру после нажатия.")]
+        [SerializeField] private float pressRecoverTime = 0.15f;
+
         [Header("Цвета")]
         [SerializeField] private Color cellColor = new Color(1f, 1f, 1f, 0.07f);
         [SerializeField] private Color labelColor = new Color(1f, 1f, 1f, 0.22f);
@@ -49,6 +62,7 @@ namespace Radio.Minigames
         private RectTransform _beacon;
         private RectTransform _wireRoot;
         private bool _built;
+        private float _pressTimer;
 
         /// <summary>Сторона клетки вместе с зазором — шаг сетки.</summary>
         private float Step => cellSize + cellGap;
@@ -94,6 +108,27 @@ namespace Radio.Minigames
             {
                 _beacon.anchoredPosition = ToLocal(cellPosition);
             }
+        }
+
+        /// <summary>
+        /// Маячок вздрагивает: сразу сжимается и плавно возвращается к своему размеру.
+        /// Повторное нажатие до возврата сжимает его заново.
+        /// </summary>
+        public void PulseBeacon() => _pressTimer = pressRecoverTime;
+
+        private void Update()
+        {
+            if (_beacon == null || _pressTimer <= 0f)
+            {
+                return;
+            }
+
+            _pressTimer = Mathf.Max(0f, _pressTimer - Time.unscaledDeltaTime);
+
+            // Сжатие мгновенное, возврат плавный: так щелчок читается как удар,
+            // а не как медленное дыхание.
+            var t = 1f - _pressTimer / Mathf.Max(0.01f, pressRecoverTime);
+            _beacon.localScale = Vector3.one * Mathf.Lerp(pressScale, 1f, t * t * (3f - 2f * t));
         }
 
         /// <summary>
@@ -193,11 +228,21 @@ namespace Radio.Minigames
         private void BuildBeacon()
         {
             _beacon = Create("Beacon", board);
-            _beacon.sizeDelta = new Vector2(cellSize * 0.30f, cellSize * 0.62f);
-
             var image = _beacon.gameObject.AddComponent<Image>();
-            image.color = beaconColor;
             image.raycastTarget = false;
+
+            if (beaconSprite != null)
+            {
+                // Белый цвет, чтобы картинка шла своими цветами, а не перекрашивалась.
+                _beacon.sizeDelta = Vector2.one * (cellSize * beaconSize);
+                image.sprite = beaconSprite;
+                image.preserveAspect = true;
+                image.color = Color.white;
+                return;
+            }
+
+            _beacon.sizeDelta = new Vector2(cellSize * 0.30f, cellSize * 0.62f);
+            image.color = beaconColor;
         }
 
         /// <summary>
@@ -241,6 +286,7 @@ namespace Radio.Minigames
         {
             // Следующий заход собирает поле заново: уровень мог смениться.
             _built = false;
+            _pressTimer = 0f;
         }
 
         public bool IsBuilt => _built;

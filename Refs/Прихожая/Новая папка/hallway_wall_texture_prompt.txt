@@ -1,0 +1,14 @@
+Use case: stylized-concept
+Asset type: seamless tileable wall material texture for a video game
+
+Create a perfectly seamless square tiling texture for the wall surface of a well-kept ordinary Russian apartment entrance hallway from the late 1990s to early 2000s. Material: inexpensive washable vinyl wallpaper on a smooth plaster wall, warm light beige and muted cream palette, very subtle alternating vertical bands about 8–12 cm wide, small understated repeating abstract leaf-and-diamond motifs in slightly darker beige, delicate fine paper grain and hand-painted brush texture. The wallpaper should feel authentic to a modest but tidy Russian/post-Soviet apartment of the era, neutral and slightly old-fashioned without looking dirty or damaged.
+
+Stylized hand-painted cel-shaded game texture matching a comic-book/Borderlands-inspired environment: restrained dark brown ink accents around some motif edges, thin hand-drawn irregularities, visible painterly strokes, simplified flat color zones, subtle two-step tonal variation, but no directional object shading. Keep the pattern low-contrast so it does not overpower furniture and props.
+
+Texture view: perfectly flat orthographic front-on surface capture, uniform scale across the entire image, no perspective, no camera angle, no depth recession, no room corner. Uniform neutral illumination baked as little as possible. No highlights, no shadows, no ambient occlusion, no gradient, no vignette.
+
+Seamless requirements: tileable on all four edges; left edge must match right edge exactly and top edge must match bottom edge exactly in color, grain, lines, and motif placement. Pattern spacing must continue naturally across every boundary with no seams, border, frame, edge darkening, cut motifs, abrupt changes, or unique central focal point. Suitable for repeated tiling over a large corridor wall without visible repetition seams.
+
+Clean normal well-maintained condition: no dirt, dust, stains, mold, water marks, tears, peeling, scratches, cracks, holes, fading, discoloration, damage, wear, switches, sockets, trim, baseboards, doors, hooks, furniture, objects, text, logos, watermark, UI, or frame. High detail, sharp focus, square 1:1 texture.
+
+Final technical processing: use the clean central wallpaper area as the source, construct a mirrored 2x2 repeat, then take the centered square tile. This guarantees pixel-identical left/right and top/bottom edges while preserving the generated period wallpaper design.

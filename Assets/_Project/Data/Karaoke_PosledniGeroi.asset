@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2e8db4e3f9ec5648ab4f4178c22a854, type: 3}
+  m_Name: Karaoke_PosledniGeroi
+  m_EditorClassIdentifier: Assembly-CSharp::Radio.Minigames.KaraokeSong
+  clip: {fileID: 8300000, guid: c496b08b5f62f144c875d42087799b49, type: 3}
+  timings: {fileID: 4900000, guid: 4ca9d89ab02e304489bcd047b0856bde, type: 3}
+  hitWindow: 0.1
+  perfectWindow: 0.05
+  leadTime: 2
+  offset: 0
+  outroDelay: 1.5

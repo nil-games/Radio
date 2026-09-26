@@ -20,3 +20,24 @@ title: Jacket_Examine
 
 <<set $STORY_FOUND_SERGEY_JACKET = true>>
 ===
+
+
+// ----------------------------------------------------------------------------
+// Банка квашеной капусты, которую оставила бабка Зина.
+//
+// Появляется на столе в 01:00, когда визит закончился (ActivateAtTime на EvenyProps).
+// Осматривается один раз, как куртка: дальше $banka_can_examine ложна,
+// и банка перестаёт ловить прицел.
+// ----------------------------------------------------------------------------
+title: Banka_Declarations
+---
+<<declare $ACTION_EXAMINED_ZINA_JAR = false>>
+<<declare $banka_can_examine = not $ACTION_EXAMINED_ZINA_JAR>>
+===
+
+title: Banka_Examine
+---
+Я: Банка квашеной капусты, оставленная Баб Зиной.
+
+<<set $ACTION_EXAMINED_ZINA_JAR = true>>
+===

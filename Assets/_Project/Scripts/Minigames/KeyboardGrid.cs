@@ -88,6 +88,33 @@ namespace Radio.Minigames
             return false;
         }
 
+        /// <summary>
+        /// Клавиша, на которой стоит русская буква. Ё на поле «Провода» не нужна и в сетке
+        /// её нет, но слова на неё бывают: для них клетка собирается отдельно, вне поля.
+        /// </summary>
+        public static bool TryGetByCyrillic(string letter, out Cell cell)
+        {
+            if (string.Equals(letter, "Ё", System.StringComparison.OrdinalIgnoreCase))
+            {
+                cell = new Cell(Key.Backquote, -1, -1, "Ё", "`");
+                return true;
+            }
+
+            foreach (var candidate in All)
+            {
+                if (!string.Equals(candidate.Cyrillic, letter, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                cell = candidate;
+                return true;
+            }
+
+            cell = default;
+            return false;
+        }
+
         private static Cell[] BuildLayout()
         {
             var cells = new List<Cell>(46);

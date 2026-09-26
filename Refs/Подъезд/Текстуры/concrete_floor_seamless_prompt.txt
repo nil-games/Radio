@@ -1,0 +1,17 @@
+Use case: stylized-concept
+Asset type: seamless tileable floor material texture for a video game
+Input image: material and color reference only, specifically the gray speckled concrete floor visible on the stair landing
+
+Create a perfectly seamless square texture of the same utilitarian concrete floor used in the referenced Russian apartment-building stairwell. Material: dense smooth poured concrete / fine exposed-aggregate concrete typical of Soviet and post-Soviet common areas, with a medium-light warm gray-beige cement base and many small irregular mineral inclusions. Fine scattered aggregate consists of restrained dark charcoal-gray, medium gray, pale gray and muted beige flecks, with only occasional slightly larger rounded chips. Match the reference floor's overall value, particle scale, density and stylized hand-painted appearance.
+
+Keep the surface visually even and quiet. The aggregate distribution is random and uniform across the image, without clusters, rings, stripes, large stones, repeated motifs or a central focal point. No strong color variation, no bright colored terrazzo chips, no high contrast black-and-white mosaic effect. Subtle low-contrast painterly variation compatible with the existing cel-shaded comic-book environment, but no black outlines around individual grains.
+
+The concrete is clean, intact and maintained. No dirt, dust, footprints, stains, oil marks, gum, cracks, seams, expansion joints, tile boundaries, holes, scratches, chips, erosion, puddles, moss or damage.
+
+The material fills every pixel from corner to corner. Perfectly flat orthographic top-down surface capture, uniform scale, no perspective, no camera angle, no stairs, risers, walls, doors, railings, objects or environment. Uniform neutral illumination with no baked lighting, directional shading, highlights, reflections, cast shadows, ambient occlusion, gradients or vignette.
+
+Seamless requirements: genuinely tileable on all four edges. Base color, fine aggregate and subtle surface variation must continue naturally through left/right and top/bottom boundaries without seams, borders, edge darkening, abrupt density changes or recognizable mirrored patterns.
+
+No material sphere, swatch, floor fragment, frame, margin, white background, transparent area, text, logo, watermark or UI. High detail, sharp focus, opaque square 1:1 texture suitable for repeated tiling on a 3D floor material.
+
+Final technical processing: overlap and crossfade corresponding edge regions into a cyclic texture, then move the blended regions away from the boundaries and verify on a 2×2 tiled preview. Do not use four-way mirroring.

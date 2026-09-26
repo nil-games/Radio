@@ -1,0 +1,9 @@
+Use case: precise-object-edit / stylized-concept
+Asset type: corrected seamless floor texture for a video game
+Input image: previous concrete texture, used only to preserve material identity, palette, aggregate scale and stylized appearance
+
+Create the same warm gray-beige fine exposed-aggregate concrete, but remove all low-frequency tonal variation. Average brightness, hue, aggregate density and contrast must be statistically uniform in the top, bottom, left, right, center and corners. When blurred or viewed as a thumbnail, the whole square must read as one flat value. No cloudy regions, gradients, bands, vignette, square patches or recognizable large-scale landmarks.
+
+Retain only small-scale detail: evenly distributed irregular dark gray, medium gray, pale gray and muted beige mineral flecks, with occasional slightly larger rounded chips. Clean intact material; no cracks, joints, tiles, seams, scratches, stains, dirt, shadows or lighting. Flat orthographic full-frame square texture, no objects, borders, text or transparency.
+
+Final technical correction: remove residual low-frequency illumination with a large-radius local-mean normalization; assemble opposing edges as a cyclic overlap; process the result with wrap-around filtering; reconcile the outermost texel bands; validate on a 6×6 tiled preview at reduced scale. Do not use four-way mirroring.

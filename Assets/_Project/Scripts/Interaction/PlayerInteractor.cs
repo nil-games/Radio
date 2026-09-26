@@ -64,6 +64,9 @@ namespace Radio.Interaction
         /// <summary>Снять свой запрет. Ввод вернётся, когда снимут все.</summary>
         public void RemoveInputBlock(object owner) => _inputBlocks.Remove(owner);
 
+        /// <summary>Кто-то держит ввод: идёт разговор, игрок смотрит в экран или играет.</summary>
+        public bool IsInputBlocked => _inputBlocks.Count > 0;
+
         /// <summary>Объект отпускает игрока.</summary>
         public void EndExclusive(Interactable owner)
         {

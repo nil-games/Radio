@@ -11,24 +11,12 @@ namespace Radio.World
     /// события. Они пишутся внутри самого узла обычным условием Yarn: иначе логика ночи
     /// расползлась бы по двум местам с разным синтаксисом, и на вопрос «почему звонок не
     /// прозвучал» пришлось бы отвечать, глядя сразу в таблицу и в текст.
-    /// Таблица отвечает только на вопрос «когда».
+    /// Таблица отвечает только на вопрос «когда» — и всегда по часам смены,
+    /// при необходимости с задержкой в реальных секундах после отметки.
     /// </remarks>
     [CreateAssetMenu(fileName = "NightSchedule", menuName = "Радио/Расписание ночи")]
     public sealed class NightSchedule : ScriptableObject
     {
-        /// <summary>По какому таймеру срабатывает событие.</summary>
-        public enum TriggerKind
-        {
-            /// <summary>По игровым часам смены. Они стоят, пока игрок не сделает действие.</summary>
-            GameTime,
-
-            /// <summary>
-            /// По реальным секундам от начала смены. Для событий, которые должны случиться,
-            /// даже если игрок просто ходит по квартире и ничего не трогает.
-            /// </summary>
-            RealSeconds,
-        }
-
         [Serializable]
         public struct Entry
         {
@@ -38,27 +26,11 @@ namespace Radio.World
             [Tooltip("Номер ночи, 1–7.")]
             public int night;
 
-            public TriggerKind trigger;
-
-            [Tooltip("Только для игрового времени. Час отметки: 0–6, смена идёт с 00:00 до 06:00.")]
-            public int hour;
-
-            [Tooltip("Только для игрового времени.")]
-            public int minute;
-
-            [Tooltip("Только для реального времени: через сколько секунд после начала смены.")]
-            public float afterSeconds;
+            [Tooltip("Когда: отметка на часах смены (00:00–06:00) и задержка в реальных секундах после неё.")]
+            public GameTimeMark when;
 
             [Tooltip("Узел .yarn, который запустится при достижении отметки.")]
             public string yarnNode;
-
-            [Tooltip("Сработать не более одного раза за запуск.")]
-            public bool once;
-
-            /// <summary>Отметка в минутах от начала смены.</summary>
-            public int Minutes => hour * 60 + minute;
-
-            public string Clock => $"{hour:00}:{minute:00}";
         }
 
         [Tooltip("Строки расписания. Порядок неважен: они сортируются по времени сами.")]

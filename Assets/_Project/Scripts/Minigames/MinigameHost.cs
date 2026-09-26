@@ -28,19 +28,26 @@ namespace Radio.Minigames
         [SerializeField] private WirePuzzleGame wire;
 
         [Header("Уровни")]
-        [Tooltip("Уровень, который откроется по команде start_minigame wire.")]
-        [SerializeField] private WirePuzzle wireLevel;
+        [Tooltip("Уровни, которые идут подряд по команде start_minigame wire. Прошёл один — " +
+                 "сразу следующий, поле не закрывается и музыка не прерывается. " +
+                 "Один и тот же ассет можно поставить дважды: провод каждый раз новый.")]
+        [SerializeField] private WirePuzzle[] wireLevels = System.Array.Empty<WirePuzzle>();
 
         [Header("Итог")]
         [Tooltip("Флаг мира, который ставится после победы. Пусто — ничего не ставить.")]
         [SerializeField] private string successFlag = "STORY_FIRST_BROADCAST_STARTED";
 
+        [Tooltip("До какого времени довести часы смены после победы, «ЧЧ:ММ». " +
+                 "Пусто — часы не трогать. Уже пройденную отметку часы не откатывают.")]
+        [SerializeField] private string timeAfterWin = "00:30";
+
         private PlayerInteractor _interactor;
         private bool _pending;
+        private int _level;
 
         private void Awake()
         {
-            if (root == null || wire == null)
+            if (root == null || wire == null || wireLevels.Length == 0)
             {
                 Debug.LogError($"{nameof(MinigameHost)}: не заданы поле или мини-игра.", this);
                 enabled = false;
@@ -115,7 +122,15 @@ namespace Radio.Minigames
             _pending = false;
             TakeOverPlayer();
             root.SetActive(true);
-            wire.Begin(wireLevel);
+            _level = 0;
+            BeginLevel();
+        }
+
+        private void BeginLevel()
+        {
+            // Номер уровня показываем, только когда их несколько: «1/1» ничего не сообщает.
+            var label = wireLevels.Length > 1 ? $"Уровень {_level + 1}/{wireLevels.Length}." : null;
+            wire.Begin(wireLevels[_level], label);
         }
 
         private void TakeOverPlayer()
@@ -159,19 +174,51 @@ namespace Radio.Minigames
 
         private void HandleWon()
         {
+            // Поле не гасим между уровнями: на нём висит музыка, и она должна
+            // играть сквозь всю мини-игру, а не начинаться заново.
+            if (++_level < wireLevels.Length)
+            {
+                BeginLevel();
+                return;
+            }
+
             ReleasePlayer();
 
-            if (string.IsNullOrWhiteSpace(successFlag))
+            var session = GameSession.Current;
+
+            if (session == null)
             {
                 return;
             }
 
-            var session = GameSession.Current;
+            // Часы после эфира: на отметку 00:30 привязан приход гостя (DoorKnocker),
+            // так что стук раздастся сразу после победы.
+            AdvanceTime(session.Time);
 
-            if (session != null)
+            if (!string.IsNullOrWhiteSpace(successFlag))
             {
                 session.World.Set(successFlag, true);
             }
+        }
+
+        private void AdvanceTime(TimeManager time)
+        {
+            if (string.IsNullOrWhiteSpace(timeAfterWin))
+            {
+                return;
+            }
+
+            var parts = timeAfterWin.Split(':');
+
+            if (parts.Length != 2
+                || !int.TryParse(parts[0], out var hour)
+                || !int.TryParse(parts[1], out var minute))
+            {
+                Debug.LogError($"{nameof(MinigameHost)}: время «{timeAfterWin}» не в формате ЧЧ:ММ.", this);
+                return;
+            }
+
+            time.AdvanceTo(hour, minute);
         }
 
         private void HandleAborted() => ReleasePlayer();

@@ -25,6 +25,21 @@ namespace Radio.UI
         [Tooltip("Строка подсказки. Сюда пойдут сообщения о приборах на столе.")]
         [SerializeField] private TextMeshProUGUI hint;
 
+        [Header("Подписи клавиш")]
+        [Tooltip("Клавиша над левой стрелкой.")]
+        [SerializeField] private string leftKey = "Q";
+
+        [Tooltip("Клавиша над правой стрелкой.")]
+        [SerializeField] private string rightKey = "E";
+
+        [Tooltip("Шрифт подписей. Если пусто, берётся шрифт строки подсказки.")]
+        [SerializeField] private TMP_FontAsset keyFont;
+
+        [SerializeField] private float keyFontSize = 30f;
+
+        [Tooltip("Насколько выше стрелки стоит подпись, пикселей.")]
+        [SerializeField] private float keyOffset = 12f;
+
         /// <summary>Нажата стрелка влево.</summary>
         public event Action TurnLeftRequested;
 
@@ -109,8 +124,44 @@ namespace Radio.UI
             leftArrow.onClick.AddListener(RaiseTurnLeft);
             rightArrow.onClick.AddListener(RaiseTurnRight);
 
+            // Подпись — ребёнок самой стрелки: прячется и появляется вместе с ней.
+            AddKeyLabel(leftArrow, leftKey);
+            AddKeyLabel(rightArrow, rightKey);
+
             panel.SetActive(false);
             SetHint(string.Empty);
+        }
+
+        private void AddKeyLabel(Button arrow, string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return;
+            }
+
+            var go = new GameObject("KeyLabel", typeof(RectTransform));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(arrow.transform, false);
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, keyOffset);
+            rect.sizeDelta = new Vector2(80f, keyFontSize + 8f);
+
+            var label = go.AddComponent<TextMeshProUGUI>();
+            var font = keyFont != null ? keyFont : hint != null ? hint.font : null;
+
+            if (font != null)
+            {
+                label.font = font;
+            }
+
+            label.text = key;
+            label.fontSize = keyFontSize;
+            label.fontStyle = FontStyles.Bold;
+            label.color = new Color(1f, 1f, 1f, 0.85f);
+            label.alignment = TextAlignmentOptions.Bottom;
+            label.raycastTarget = false;
         }
 
         private void RaiseTurnLeft() => TurnLeftRequested?.Invoke();

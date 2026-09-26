@@ -1,0 +1,9 @@
+Use case: precise-object-edit
+Asset type: front-face base color texture for a simple rectangular 3D chocolate-bar primitive
+Input image: the supplied stylized Alyonka chocolate prop is the edit target and exact design reference.
+
+Transform the visible front wrapper face into a perfectly flat, straight, orthographic front-facing texture. Preserve the same stylized hand-painted comic artwork and recognizable layout from the input: dark brown fine crosshatched upper field, blue-eyed child's printed portrait in a green floral headscarf, warm creamy-yellow lower field, red oval manufacturer emblem, Cyrillic title "Алёнка", and small "МОЛОЧНЫЙ ШОКОЛАД" lettering. Preserve the same warm palette, fine ink contours and painted brush texture. This is a texture extraction from the existing prop, not a new product redesign.
+
+Output only the flat rectangular front label surface. The wrapper rectangle is exactly vertical, centered, symmetrical and undistorted. All four outer edges are perfectly straight; all four corners are square; top and bottom are horizontal; sides are parallel. No perspective, no foreshortening, no rotation, no side thickness, no folded bottom flap, no bevel, no rim, no cast shadow, no lighting gradient and no three-dimensional presentation.
+
+The wrapper artwork fills the image from edge to edge with no white background, margin, border, frame or transparent area. Portrait and typography remain upright. Keep the entire front design within the rectangle; do not crop the face, title, emblem or lower label. Uniform diffuse color with no baked highlights or shadows, suitable as an albedo/base-color texture applied directly to the front face of a rectangular box primitive. Tall 1:2 wrapper proportions represented inside the generated canvas; high detail, sharp focus. No additional objects, hands, UI or watermark.

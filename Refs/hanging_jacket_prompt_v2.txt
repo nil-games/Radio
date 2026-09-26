@@ -1,0 +1,13 @@
+Use case: precise-object-edit
+Asset type: image-to-3D reference for a single video-game prop
+Input image: hanging_jacket.png is the edit target and visual reference for the jacket design, colors, materials, ink treatment, and clean asset-sheet presentation.
+
+Edit the jacket into a convincing vertically hanging pose, as though it is suspended from a wall coat hook by the inside back of its collar, but do not show the hook or any other support. Make the entire silhouette clearly taller, narrower, and more vertically elongated. Reduce the broad worn-on-a-person shoulder shape: let the shoulder fabric slope downward naturally from the supported collar. Both empty sleeves must fall straight down under gravity, close alongside the torso, almost parallel to the central zipper. Keep only a small narrow gap between each sleeve and the jacket body where needed for silhouette readability. The elbows must not project sideways; the cuffs should hang near the lower hem. Add restrained vertical gravity folds from the collar and shoulders toward the hem and cuffs. The jacket must look empty, limp, and naturally suspended, not worn by an invisible person, not spread out, and not laid flat.
+
+Preserve the same modest late-1990s to early-2000s Russian/post-Soviet casual jacket design: hip-length dark navy-blue matte synthetic shell, straight central zipper fully closed, short stand collar, two simple symmetrical slanted welt pockets, elasticated cuffs and lower hem, subtle stitched panel seams. Preserve the clean condition, cel-shaded hand-painted comic-book rendering, bold black silhouette lines, thinner detail lines, navy color palette, material readability, direct front view, and period-authentic plain construction.
+
+Camera: direct front view with mild perspective, slightly above eye level by about 10–15 degrees, 50mm lens feel. Center the elongated hanging jacket in a square 1:1 frame. The complete collar, sleeves, cuffs, and hem must remain visible with generous even white margins; nothing cropped.
+
+Background: pure solid opaque white (#FFFFFF), seamless and empty. No floor, ground plane, horizon, environment, cast shadow, reflection, or vignette. Soft, even frontal studio lighting.
+
+Constraints: change the pose and resulting gravity folds only; preserve the recognizable jacket construction and art style. Isolated single object only. No visible hook, hanger, peg, nail, rail, loop, cord, mannequin, body, person, hands, extra props, readable text, logos, watermark, UI, or frame. No sideways-spread sleeves, no T-pose, no invisible-body shoulder shape, no floating pose. Clean asset-sheet image suitable for image-to-3D model generation; high detail and sharp focus.

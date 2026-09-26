@@ -31,26 +31,35 @@ title: Mixer_Use
 ===
 
 
+// Пока играет кассета, все варианты погашены. Последний вариант скрыт: окно выбора
+// само выбирает его, когда запись кончилась, и список строится заново уже доступным
+// (см. TapeGatedOptionsPresenter).
 title: Mixer_Channels
 ---
--> MIC — микрофон
+-> MIC — микрофон <<if not tape_playing()>>
     <<jump Mixer_ChannelStub>>
--> PHONE — телефонная линия
+-> PHONE — телефонная линия <<if not tape_playing()>>
     <<jump Mixer_ChannelStub>>
--> TAPE A — кассетник A
+-> TAPE A — кассетник A <<if not tape_playing()>>
+    <<task_done tape_a>>
+    <<task_add start_broadcast>>
+    <<play_tape 103FM 0.5>>
+    <<jump Mixer_Channels>>
+-> TAPE B — кассетник B <<if not tape_playing()>>
     <<jump Mixer_ChannelStub>>
--> TAPE B — кассетник B
+-> CD — проигрыватель <<if not tape_playing()>>
     <<jump Mixer_ChannelStub>>
--> CD — проигрыватель
+-> AUX — дополнительный вход <<if not tape_playing()>>
     <<jump Mixer_ChannelStub>>
--> AUX — дополнительный вход
+-> LINE — линейный вход <<if not tape_playing()>>
     <<jump Mixer_ChannelStub>>
--> LINE — линейный вход
-    <<jump Mixer_ChannelStub>>
--> Начать эфир.
+-> Начать эфир. <<if not tape_playing()>>
+    <<task_done start_broadcast>>
     Микшер: Лампа загорается. Сигнал уходит в провод.
     <<start_minigame wire>>
--> Отойти от пульта.
+-> Отойти от пульта. <<if not tape_playing()>>
+-> … <<if tape_playing()>> #tape_end
+    <<jump Mixer_Channels>>
 ===
 
 

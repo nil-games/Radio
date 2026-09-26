@@ -132,8 +132,12 @@ namespace Radio.Dialogue
                 return;
             }
 
-            world.Set(StripPrefix(variableName), value);
-            NotifyVariableChanged(variableName, value);
+            // Сообщаем то, что легло в мир, а не то, что пришло: параметры сюжета
+            // прижимаются к диапазону, и подписчики Yarn иначе увидели бы $Crime = 6.
+            var flag = StripPrefix(variableName);
+            world.Set(flag, value);
+            world.TryGet(flag, out float stored);
+            NotifyVariableChanged(variableName, stored);
         }
 
         public override void SetValue(string variableName, string value)

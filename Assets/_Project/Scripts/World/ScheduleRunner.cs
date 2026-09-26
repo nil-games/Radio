@@ -19,14 +19,16 @@ namespace Radio.World
 
         [SerializeField] private DialogueController dialogue;
 
+        private sealed class Pending
+        {
+            public NightSchedule.Entry Entry;
+            public TimedEvent Event;
+        }
+
         // Очередь нужна потому, что одно действие игрока может перешагнуть сразу две отметки,
         // а диалоги обязаны идти по очереди, а не наложиться друг на друга.
-        private readonly Queue<NightSchedule.Entry> _pending = new Queue<NightSchedule.Entry>();
-        private readonly HashSet<string> _fired = new HashSet<string>();
-
-        // Отсчёт реального времени ведём от включения, а не от Time.time: сцена могла
-        // грузиться долго, и секунды загрузки в смену не входят.
-        private float _startedAt;
+        private readonly Queue<NightSchedule.Entry> _queue = new Queue<NightSchedule.Entry>();
+        private readonly List<Pending> _events = new List<Pending>();
 
         // Именно Start, а не Awake: ссылки берутся из GameSession, а порядок Awake
         // между объектами Unity не гарантирует — в Awake сессии могло ещё не быть.
@@ -51,52 +53,38 @@ namespace Radio.World
                 return;
             }
 
-            time.TimeAdvanced += OnTimeAdvanced;
-            dialogue.DialogueFinished += StartNextIfIdle;
-            _startedAt = Time.time;
-        }
-
-        /// <summary>
-        /// Реальное время. Нужно для событий, которые должны случиться, даже если игрок
-        /// просто ходит по квартире: игровые часы в это время стоят и сами ничего не запустят.
-        /// </summary>
-        private void Update()
-        {
-            var elapsed = Time.time - _startedAt;
-            var queued = false;
-
             foreach (var entry in schedule.Entries)
             {
-                if (entry.trigger != NightSchedule.TriggerKind.RealSeconds
-                    || entry.night != time.Night
-                    || string.IsNullOrWhiteSpace(entry.yarnNode))
+                if (entry.night != time.Night || string.IsNullOrWhiteSpace(entry.yarnNode))
                 {
                     continue;
                 }
 
-                if (elapsed < entry.afterSeconds || _fired.Contains(Key(entry)))
+                var timed = new TimedEvent(entry.when);
+
+                if (!timed.IsValid)
                 {
+                    Debug.LogError($"{nameof(ScheduleRunner)}: у события {entry.id} время «{entry.when.at}» " +
+                                   "не в формате ЧЧ:ММ.", this);
                     continue;
                 }
 
-                // Отмечаем независимо от флага once: по реальному времени отметка
-                // проходится один раз, и без этого событие запускалось бы каждый кадр.
-                _fired.Add(Key(entry));
-                _pending.Enqueue(entry);
-                queued = true;
+                _events.Add(new Pending { Entry = entry, Event = timed });
             }
 
-            if (queued)
-            {
-                StartNextIfIdle();
-            }
+            // Сортируем по времени: перешагнув сразу 01:10 и 01:20, игрок должен услышать
+            // их в том порядке, в котором они стоят в ночи, а не в порядке строк таблицы.
+            _events.Sort((a, b) => a.Event.Minutes.CompareTo(b.Event.Minutes));
+
+            time.DebugJumped += OnDebugJumped;
+            dialogue.DialogueFinished += StartNextIfIdle;
         }
 
         private void OnDestroy()
         {
             if (time != null)
             {
-                time.TimeAdvanced -= OnTimeAdvanced;
+                time.DebugJumped -= OnDebugJumped;
             }
 
             if (dialogue != null)
@@ -105,63 +93,60 @@ namespace Radio.World
             }
         }
 
-        /// <summary>
-        /// Отметки берутся полуинтервалом (откуда, докуда]: начало исключено, потому что
-        /// на нём событие уже отработало предыдущим сдвигом.
-        /// </summary>
-        private void OnTimeAdvanced(int from, int to)
+        private void Update()
         {
-            var matched = new List<NightSchedule.Entry>();
+            var queued = false;
 
-            foreach (var entry in schedule.Entries)
+            foreach (var pending in _events)
             {
-                if (entry.trigger != NightSchedule.TriggerKind.GameTime
-                    || entry.night != time.Night
-                    || string.IsNullOrWhiteSpace(entry.yarnNode))
+                if (pending.Event.Poll(time))
                 {
-                    continue;
+                    _queue.Enqueue(pending.Entry);
+                    queued = true;
                 }
-
-                var mark = entry.Minutes;
-
-                if (mark <= from || mark > to)
-                {
-                    continue;
-                }
-
-                if (entry.once && _fired.Contains(Key(entry)))
-                {
-                    continue;
-                }
-
-                matched.Add(entry);
             }
 
-            // Сортируем по времени: перешагнув сразу 01:10 и 01:20, игрок должен услышать
-            // их в том порядке, в котором они стоят в ночи, а не в порядке строк таблицы.
-            matched.Sort((a, b) => a.Minutes.CompareTo(b.Minutes));
-
-            foreach (var entry in matched)
+            if (queued)
             {
-                _fired.Add(Key(entry));
-                _pending.Enqueue(entry);
+                StartNextIfIdle();
+            }
+        }
+
+        /// <summary>Отладочный перевод часов: разговоры более раннего времени уже не начнутся.</summary>
+        private void OnDebugJumped(int minutes)
+        {
+            foreach (var pending in _events)
+            {
+                pending.Event.SkipIfBefore(minutes);
             }
 
-            StartNextIfIdle();
+            // Из очереди тоже: там могли ждать разговоры, отменённые только что.
+            var kept = new List<NightSchedule.Entry>();
+
+            foreach (var entry in _queue)
+            {
+                if (entry.when.TryGetMinutes(out var mark) && mark >= minutes)
+                {
+                    kept.Add(entry);
+                }
+            }
+
+            _queue.Clear();
+
+            foreach (var entry in kept)
+            {
+                _queue.Enqueue(entry);
+            }
         }
 
         private void StartNextIfIdle()
         {
-            if (_pending.Count == 0 || dialogue.IsRunning)
+            if (_queue.Count == 0 || dialogue.IsRunning)
             {
                 return;
             }
 
-            var entry = _pending.Dequeue();
-            dialogue.StartDialogue(entry.yarnNode);
+            dialogue.StartDialogue(_queue.Dequeue().yarnNode);
         }
-
-        private static string Key(NightSchedule.Entry entry) =>
-            entry.night + "/" + (string.IsNullOrWhiteSpace(entry.id) ? entry.yarnNode : entry.id);
     }
 }

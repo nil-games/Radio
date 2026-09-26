@@ -1,0 +1,16 @@
+Use case: stylized-concept
+Asset type: seamless tileable wall material texture for a video game
+
+Create a perfectly seamless full-frame square texture for the wall surface of a tidy ordinary Russian apartment entrance hallway from the late 1990s to early 2000s. Material: inexpensive washable vinyl wallpaper over smooth plaster. Overall color is warm light beige / soft greige with extremely subtle tonal variation. The design is intentionally neutral and quiet: only a barely visible fine vertical woven-paper grain and occasional very soft narrow tone bands. No flowers, no leaves, no diamonds, no medallions, no decorative symbols, no contrasting stripes, and no recognizable repeating ornament.
+
+Keep the visual treatment compatible with the existing stylized comic-book apartment assets through a restrained hand-painted surface: delicate brush grain and very subtle two-step color variation. Do not use bold outlines or dark ink shapes on this texture. It must function as a calm background material that will not compete with furniture or props.
+
+The wallpaper surface must fill every pixel of the square image from corner to corner. Do not show a circular sample, material sphere, swatch, torn sheet, roll, wall fragment, border, frame, transparent area, black corners, white background, or empty margin.
+
+Texture view: perfectly flat orthographic front-on surface capture, uniform scale, no perspective, no camera angle, no depth recession, no room corner. Uniform neutral illumination with almost no baked lighting. No directional shading, highlights, shadows, ambient occlusion, gradient, or vignette.
+
+Seamless requirements: tileable on all four edges; left edge must match right edge exactly and top edge must match bottom edge exactly in color and grain. The subtle surface texture must continue naturally across every boundary with no seams, borders, edge darkening, abrupt changes, or central focal point.
+
+Clean, normal, well-maintained condition: no dirt, dust, stains, mold, water marks, tears, peeling, scratches, cracks, holes, fading, discoloration, damage, wear, switches, sockets, trim, baseboards, doors, hooks, furniture, objects, text, logos, watermark, UI, or frame. High detail, sharp focus, square 1:1 texture.
+
+Final technical processing: average the clean generated surface with its horizontal, vertical, and combined reflections. This preserves the quiet woven grain without an internal cross seam and makes opposite edges pixel-identical.

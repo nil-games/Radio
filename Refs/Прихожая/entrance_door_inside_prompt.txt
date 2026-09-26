@@ -1,0 +1,16 @@
+Use case: stylized-concept
+Asset type: image-to-3D reference for a single video-game prop
+
+Single unified game prop asset: the complete inside-facing entrance door assembly of a modest Russian apartment from the late 1990s to early 2000s. The door is closed and shown from inside the apartment. Include the full rectangular door slab, matching metal door frame, visible interior threshold, and simple hinges along the left side. The interior door surface is finished in clean dark walnut-brown padded vinyl upholstery with restrained shallow diamond stitching typical of the period, mounted on a sturdy steel apartment door. The design is practical and slightly chunky, not luxurious.
+
+Required hardware on the apartment-facing side: one small circular brass peephole centered horizontally at realistic adult eye height in the upper third of the door; one plain dark-brass horizontal lever handle on a rectangular backplate on the right side; one keyhole integrated beneath the handle; one separate round upper deadbolt escutcheon above the handle; a short security chain mounted neatly near the upper lock side. All hardware must be plausible, correctly scaled, clean, and free of text or branding. No mail slot, no house number, no sign, no name plate, no decorative wreath, and no exterior-facing hardware.
+
+Designed for a video game set in a well-kept ordinary Russian apartment of the 1990s–2000s. Stylized cel-shaded 3D render in a hand-drawn comic-book look similar to the Borderlands art style: bold black ink outlines on the complete silhouette and major construction edges, thinner hand-drawn lines on stitching and hardware details, painterly hand-painted textures with visible brushstrokes, flat color zones with 2–3 step toon shading, subtle crosshatching for shading accents, slightly exaggerated chunky proportions, strong readable silhouette. Authentic Russian/post-Soviet apartment-door materials and colors of the era.
+
+The complete assembly is in clean, normal, well-maintained condition as if gently used: no dirt, dust, scratches, rust, dents, chips, cracks, torn upholstery, peeling, discoloration, damage, graffiti, stickers, or wear.
+
+Camera: almost direct front view from inside the apartment with only mild three-quarter perspective, slightly above the handle level by about 10 degrees, centered, 50mm lens feel, no extreme foreshortening. The entire closed door, full frame, hinges, threshold, peephole, handle, locks, and chain are fully visible with even margins on every side. Nothing is cropped. Door proportions must be tall and realistic.
+
+Background: pure solid opaque white (#FFFFFF), seamless and empty, no wall, wallpaper, floor, ceiling, corridor, doorway opening, environment, cast shadow, reflection, or vignette. Soft even frontal studio lighting with clear material readability.
+
+Isolated single door assembly only: no characters, hands, shoes, mat, keys, furniture, extra props, readable text, logos, watermark, UI, or image frame. Clean asset-sheet presentation suitable for image-to-3D generation. High detail, sharp focus, square 1:1 composition.

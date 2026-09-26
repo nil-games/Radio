@@ -1,0 +1,27 @@
+Use case: compositing / precise-object-edit
+Asset type: environment reference image for a video game location
+
+Input image roles:
+- Image 1 is the STYLE AND MATERIAL reference only: preserve its cel-shaded comic-book rendering, cream and muted blue-green painted walls, speckled gray concrete/terrazzo, brown padded apartment doors, dark welded railings, fluorescent lighting and overall clean 1990s–2000s Russian stairwell appearance.
+- Image 2 is a STRICT TOP-DOWN FLOOR-PLAN AND CAMERA reference. Match the footprint, wall positions, apartment doorway, opposite door, stairwell opening, landings, flights and railing positions.
+- Image 3 is a STRICT ISOMETRIC SPATIAL BLOCKOUT reference. Match the height relationships, U-shaped stair configuration, open void, wall lengths, opposite-door location and direction of each stair flight.
+
+Create the finished stylized view from the apartment entrance camera shown by the blockout. The camera stands just inside the apartment entrance and looks outward through the open apartment doorway onto the shared landing. A narrow strip of the padded brown apartment door, the dark door jamb and the threshold may frame the near foreground, as in Image 1, but the architecture beyond must follow Images 2 and 3 exactly.
+
+GEOMETRY IS THE HIGHEST PRIORITY. Do not reuse or improvise the spatial arrangement from Image 1. Reconstruct the blocking faithfully:
+- The stairwell is a long rectangular room directly beyond the apartment doorway.
+- The closed neighboring brown entrance door is on the far/opposite long wall, toward the left side of the view, facing the camera from across the landing. It is not beside the apartment doorway and is not placed under a stair flight.
+- Keep the broad clear landing area between the viewer and that opposite door.
+- The U-shaped concrete staircase occupies the right-hand portion of the room exactly as in the blockout.
+- The near stair flight begins beside the right side of the apartment entrance/landing and connects into the central stair structure.
+- The long second flight runs lengthwise through the right half of the stairwell, with the open stair void and its dark welded railing placed exactly according to the top and isometric references.
+- Preserve the correct separating side wall around the stairwell and the turn/half-landing at the far right end.
+- Match the blockout camera direction and believable eye-level perspective. Straight walls remain straight; stairs use consistent riser height and tread depth; railings follow the actual flight edges.
+
+Do not add windows, extra doors, wall openings, columns or alternative stair flights that are absent from the blocking. No postal boxes or mailboxes. A small period-correct electrical panel may remain on the far wall in the same location as the gray wall object in the blockout. Keep one simple ceiling-mounted fluorescent fixture and restrained indirect cool light; do not invent a strong daylight source.
+
+Preserve the visual qualities of Image 1: stylized cel-shaded 3D environment render in a hand-drawn comic-book look similar to Borderlands, bold black ink outlines on major architectural edges, thinner ink details, hand-painted surfaces with restrained brushstrokes, flat 2–3 step toon shading, subtle crosshatching, slightly chunky readable geometry. Authentic late-1990s–early-2000s Russian apartment-building materials: pale cream upper walls, muted desaturated blue-green oil-painted lower walls with a straight division line, gray speckled concrete/terrazzo landings and steps, dark-painted welded steel railings, brown padded vinyl neighboring door with peephole, simple utility hardware.
+
+Clean and maintained condition: no dirt, litter, graffiti, posters, stickers, peeling paint, broken plaster, rust, damaged steps, exposed wires or vandalism. No modern designer finishes, marble, glass railings or LED strips. Empty environment: no people, characters, animals, bicycles, prams, furniture or personal belongings. No readable text, apartment numbers, logos, watermark, UI or frame.
+
+Camera: first-person human eye height about 1.6 meters, from the apartment doorway at the exact blockout camera position, mild natural 35mm perspective, not fisheye, not ultra-wide, no dutch angle. Square 1:1 composition, high detail, sharp focus. Final result should look like Image 1's finished art applied onto Images 2 and 3's exact 3D blocking.

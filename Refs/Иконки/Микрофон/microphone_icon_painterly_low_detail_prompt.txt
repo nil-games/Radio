@@ -1,0 +1,13 @@
+Edit this microphone illustration to a genuinely LOW-DETAIL inventory icon while preserving its current hand-painted inked comic-book ART STYLE and original tall proportions. Keep the original silhouette, same rectangular head, same U cradle, pivot knobs, stem, and round pedestal. Do not make the microphone squat or toy-like.
+
+MANDATORY visible simplification:
+1. Replace the entire dense grille pattern with EXACTLY 24 large circular dark perforations in 4 columns and 6 rows. Each hole is a simple dark painted circle with at most a short light edge, NOT a detailed beveled 3D cavity. On the visible side panel use just 3 simple dark marks. The front grille must be unmistakably much less dense than the reference.
+2. Lower dark body has only TWO prominent horizontal ridges total. Remove every other rib and tiny seam.
+3. Side pivot knobs are plain metal discs with a single broad shadow. Remove knurling, concentric fine lines, tiny bolts, and screws.
+4. Stem is a single simple painted cylindrical form. Remove the ridged collar detail.
+5. The cradle is one clearly drawn U shape, with no mechanical fittings.
+6. Base is a simple broad pedestal with its original silhouette and just three large angular painted color masses.
+
+Preserve the reference's expressive hand-painted COMIC rendering: charcoal and warm silver palette, irregular black ink outlines, broad angular brush-shaped highlights and hard-edged cel shading. Use only 2–3 major values per component and about 5 broad visible paint strokes on the whole base. Keep mature painterly illustration, NOT clean vector graphics, emoji, smooth glossy plastic, photorealistic metal or gradients. Remove ALL fine scratches, crosshatching, tiny texture grain and sparkling reflections. Detail reduction should be radical, style and shape should remain faithful. Design explicitly for instant readability at 64 pixels.
+
+Full upright microphone with entire base, same near frontal mild three-quarter view, centered square canvas and 8 percent top/bottom margin. TRUE transparent alpha background including gaps inside cradle. No floor, shadow, text, logos, badge, frame or other objects.

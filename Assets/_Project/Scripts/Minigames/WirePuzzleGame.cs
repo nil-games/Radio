@@ -21,6 +21,16 @@ namespace Radio.Minigames
         [Header("Ссылки")]
         [SerializeField] private WirePuzzleView view;
 
+        [Tooltip("Источник щелчков клавиш. Отдельный от музыки, чтобы они не перебивали друг друга.")]
+        [SerializeField] private AudioSource sfx;
+
+        [Header("Звуки нажатий")]
+        [Tooltip("Любое нажатие клавиши во время мини-игры.")]
+        [SerializeField] private AudioClip tapSound;
+
+        [Tooltip("Засчитанное нажатие: нужная клавиша вовремя. Звучит вместо обычного щелчка.")]
+        [SerializeField] private AudioClip hitSound;
+
         [Header("Уровень")]
         [Tooltip("Если пусто, уровень передаётся при запуске.")]
         [SerializeField] private WirePuzzle puzzle;
@@ -39,10 +49,12 @@ namespace Radio.Minigames
         private float[] _arrival;      // расстояние до каждой точки от старта
         private float _totalLength;
 
+        private string _stageLabel;
         private State _state = State.Idle;
         private float _distance;
         private int _nextPoint;
         private float _stateTimer;
+        private bool _hitThisFrame;
 
         /// <summary>Игрок прошёл провод целиком.</summary>
         public event Action Won;
@@ -50,8 +62,11 @@ namespace Radio.Minigames
         /// <summary>Игрок бросил мини-игру. Приходит только если разрешён выход.</summary>
         public event Action Aborted;
 
-        public void Begin(WirePuzzle level)
+        /// <param name="stageLabel">Приписка к строке состояния, например «Уровень 2/2.». Пусто — без неё.</param>
+        public void Begin(WirePuzzle level, string stageLabel = null)
         {
+            _stageLabel = stageLabel;
+
             if (level != null)
             {
                 puzzle = level;
@@ -96,11 +111,18 @@ namespace Radio.Minigames
 
             view.SetProgress(0);
             view.SetBeacon(_path[0]);
-            view.SetStatus("Сигнал пошёл. Жми клавишу на каждом узле.", Color.white);
+            var hint = "Сигнал пошёл. Жми клавишу на каждом узле.";
+            view.SetStatus(string.IsNullOrEmpty(_stageLabel) ? hint : _stageLabel + " " + hint, Color.white);
         }
 
         private void Update()
         {
+            // Отклик на клавишу — на любую и в любой момент игры, в том числе в паузе
+            // после промаха: игрок должен слышать, что клавиатура жива.
+            var keyboard = Keyboard.current;
+            var pressed = _state != State.Idle && keyboard != null && keyboard.anyKey.wasPressedThisFrame;
+            _hitThisFrame = false;
+
             switch (_state)
             {
                 case State.Running:
@@ -112,6 +134,23 @@ namespace Radio.Minigames
                 case State.Won:
                     Wait(puzzle.FinishDelay, Finish);
                     break;
+            }
+
+            if (pressed)
+            {
+                PlayFeedback(_hitThisFrame);
+            }
+        }
+
+        private void PlayFeedback(bool hit)
+        {
+            view.PulseBeacon();
+
+            var clip = hit ? hitSound : tapSound;
+
+            if (sfx != null && clip != null)
+            {
+                sfx.PlayOneShot(clip);
             }
         }
 
@@ -198,6 +237,7 @@ namespace Radio.Minigames
             }
 
             _nextPoint++;
+            _hitThisFrame = true;
             view.SetProgress(_nextPoint - 1);
 
             if (_nextPoint < _path.Length)

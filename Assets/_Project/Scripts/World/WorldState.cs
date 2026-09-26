@@ -49,6 +49,13 @@ namespace Radio.World
 
         private void Awake()
         {
+            // Параметры сюжета заводятся до стартовых флагов: так отладочный флаг
+            // может начать ночь, например, с уже подпорченной репутацией.
+            foreach (var stat in StoryStats.All)
+            {
+                Set(stat.Name, stat.Start);
+            }
+
             foreach (var flag in startupFlags)
             {
                 if (string.IsNullOrWhiteSpace(flag.name))
@@ -115,11 +122,19 @@ namespace Radio.World
             FlagChanged?.Invoke(name);
         }
 
+        /// <remarks>Параметры сюжета из <see cref="StoryStats"/> прижимаются к своему диапазону.</remarks>
         public void Set(string name, float value)
         {
             Forget(name);
-            _numbers[name] = value;
+            _numbers[name] = StoryStats.Clamp(name, value);
             FlagChanged?.Invoke(name);
+        }
+
+        /// <summary>Сдвинуть числовой флаг: Add(StoryStats.Crime, 1). Незаданный считается нулём.</summary>
+        public void Add(string name, float delta)
+        {
+            TryGet<float>(name, out var current);
+            Set(name, current + delta);
         }
 
         public void Set(string name, string value)

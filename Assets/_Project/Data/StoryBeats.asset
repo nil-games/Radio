@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b5f769dba1f0a7459f83db9d02c157d, type: 3}
+  m_Name: StoryBeats
+  m_EditorClassIdentifier: Assembly-CSharp::Radio.World.StoryBeats
+  beats:
+  - id: boss_call
+    night: 1
+    at: 00:00
+    doneFlags:
+    - STORY_BOSS_CALL_DONE
+    - STORY_FIRST_BROADCAST_PENDING
+  - id: first_broadcast_efir
+    night: 1
+    at: 00:00
+    doneFlags:
+    - STORY_FIRST_BROADCAST_STARTED
+  - id: zina_visit
+    night: 1
+    at: 00:30
+    doneFlags:
+    - STORY_GRANNY_VISIT_DONE
+    - STORY_GRANNY_JAR_ON_TABLE
+  - id: police_mail
+    night: 1
+    at: 01:00
+    doneFlags:
+    - STORY_POLICE_MAIL_ARRIVED
+    - KNOW_POLICE_MISSING_GIRL

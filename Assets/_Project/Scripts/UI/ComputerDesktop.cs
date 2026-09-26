@@ -30,6 +30,9 @@ namespace Radio.UI
             [Tooltip("Что покажется в окне. Позже заменится на настоящее содержимое программы.")]
             [TextArea(2, 6)]
             public string body;
+
+            [Tooltip("Программа со своим содержимым, например почта. Если задана, текст выше не используется.")]
+            public ComputerProgram program;
         }
 
         [Header("Значки")]
@@ -52,6 +55,7 @@ namespace Radio.UI
         [SerializeField] private ScreenFocus screen;
 
         private bool _initialized;
+        private ComputerProgram _openProgram;
 
         private void Awake() => EnsureInitialized();
 
@@ -133,12 +137,39 @@ namespace Radio.UI
                 return;
             }
 
+            CloseProgram();
             windowTitle.text = icons[index].title;
-            windowBody.text = icons[index].body;
             window.SetActive(true);
+
+            var program = icons[index].program;
+
+            if (program == null)
+            {
+                windowBody.text = icons[index].body;
+                return;
+            }
+
+            windowBody.text = string.Empty;
+            _openProgram = program;
+            program.Open(windowBody);
         }
 
-        private void CloseWindow() => window.SetActive(false);
+        private void CloseWindow()
+        {
+            CloseProgram();
+            window.SetActive(false);
+        }
+
+        private void CloseProgram()
+        {
+            if (_openProgram == null)
+            {
+                return;
+            }
+
+            _openProgram.Close();
+            _openProgram = null;
+        }
 
         private void Leave()
         {

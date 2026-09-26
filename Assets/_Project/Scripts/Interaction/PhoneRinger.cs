@@ -8,8 +8,9 @@ namespace Radio.Interaction
     /// Звонящий телефон: тянет звонок, пока игрок не снимет трубку.
     /// </summary>
     /// <remarks>
-    /// Звонок начинается по реальному времени, а не по игровым часам: игрок в этот момент
-    /// только вошёл в квартиру и ещё ничего не сделал, а часы смены стоят, пока он бездействует.
+    /// Звонок привязан к часам смены плюс задержка в реальных секундах: часы в 00:00 стоят,
+    /// пока игрок бездействует, и без задержки телефон зазвонил бы в первый же кадр.
+    /// Отладочный перевод часов дальше отметки отменяет звонок и глушит его, если он уже идёт.
     /// </remarks>
     [RequireComponent(typeof(AudioSource))]
     public sealed class PhoneRinger : MonoBehaviour
@@ -22,11 +23,12 @@ namespace Radio.Interaction
         [Tooltip("Ночи, в которые телефон звонит при входе в квартиру.")]
         [SerializeField] private int[] ringsOnNights = { 1 };
 
-        [Tooltip("Через сколько реальных секунд после начала смены зазвонит.")]
-        [SerializeField] private float delaySeconds = 2f;
+        [Tooltip("Когда зазвонит: отметка на часах смены и задержка в реальных секундах после неё.")]
+        [SerializeField] private GameTimeMark ringAt = new GameTimeMark("00:00", 2f);
 
         private AudioSource _source;
-        private float _startedAt;
+        private TimeManager _time;
+        private TimedEvent _ring;
         private bool _armed;
 
         /// <summary>Телефон звонит прямо сейчас. Пока нет — снимать трубку не с чего.</summary>
@@ -52,24 +54,45 @@ namespace Radio.Interaction
         // порядок между объектами Unity не гарантирует.
         private void Start()
         {
-            var night = GameSession.Current != null ? GameSession.Current.Time.Night : 1;
+            _time = GameSession.Current != null ? GameSession.Current.Time : null;
+            var night = _time != null ? _time.Night : 1;
             _armed = Array.IndexOf(ringsOnNights, night) >= 0;
-            _startedAt = Time.time;
+            _ring = new TimedEvent(ringAt);
+
+            if (!_ring.IsValid)
+            {
+                Debug.LogError($"{nameof(PhoneRinger)}: время звонка «{ringAt.at}» не в формате ЧЧ:ММ.", this);
+                _armed = false;
+            }
+
+            if (_time != null)
+            {
+                _time.DebugJumped += OnDebugJumped;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_time != null)
+            {
+                _time.DebugJumped -= OnDebugJumped;
+            }
         }
 
         private void Update()
         {
-            if (!_armed || IsRinging)
+            if (_armed && !IsRinging && _ring.Poll(_time))
             {
-                return;
+                StartRinging();
             }
+        }
 
-            if (Time.time - _startedAt < delaySeconds)
+        private void OnDebugJumped(int minutes)
+        {
+            if (_ring != null && _ring.SkipIfBefore(minutes))
             {
-                return;
+                StopRinging();
             }
-
-            StartRinging();
         }
 
         public void StartRinging()

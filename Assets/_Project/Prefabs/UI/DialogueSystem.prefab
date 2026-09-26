@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5787852849304386007}
   - component: {fileID: 2427539006110256211}
   - component: {fileID: 982117277598250391}
+  - component: {fileID: 8607925889527819804}
   m_Layer: 5
   m_Name: Options Presenter
   m_TagString: Untagged
@@ -117,6 +118,20 @@ MonoBehaviour:
   useFadeEffect: 1
   fadeUpDuration: 0.25
   fadeDownDuration: 0.1
+--- !u!114 &8607925889527819804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 87414934954978844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be96fb2e827ebae43af946dc66889866, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radio.Dialogue.TapeGatedOptionsPresenter
+  inner: {fileID: 982117277598250391}
+  deck: {fileID: 7014720166562027404}
 --- !u!1 &1329695657521997090
 GameObject:
   m_ObjectHideFlags: 0
@@ -797,7 +812,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 40, y: 20}
+  m_SizeDelta: {x: 80, y: 40}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &297744075715353438
 CanvasRenderer:
@@ -1120,7 +1135,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -20, y: 5}
+  m_AnchoredPosition: {x: -40, y: 15}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1665210141006072178
@@ -1308,6 +1323,9 @@ GameObject:
   - component: {fileID: 5280232586047763227}
   - component: {fileID: 6049068648925431488}
   - component: {fileID: 8767421284365508209}
+  - component: {fileID: 6721783923768921984}
+  - component: {fileID: 7014720166562027404}
+  - component: {fileID: 4434462359620201097}
   m_Layer: 0
   m_Name: DialogueSystem
   m_TagString: Untagged
@@ -1351,7 +1369,7 @@ MonoBehaviour:
   saliencyStrategy: 0
   dialoguePresenters:
   - {fileID: 5893646483697579095}
-  - {fileID: 982117277598250391}
+  - {fileID: 8607925889527819804}
   - {fileID: 3394076207199950642}
   verboseLogging: 0
   autoStart: 0
@@ -1429,6 +1447,141 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Radio.Dialogue.StageDirector
   runner: {fileID: 4411540862784189640}
   objects: []
+--- !u!82 &6721783923768921984
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6343529224246089323}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 0.5
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &7014720166562027404
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6343529224246089323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 607bdd7c10ad03f41909995ed33cbe4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radio.Dialogue.TapeDeck
+  runner: {fileID: 4411540862784189640}
+  tapes:
+  - {fileID: 8300000, guid: a58a4df0cc76ea544ab4b64f5c9eca2e, type: 3}
+--- !u!114 &4434462359620201097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6343529224246089323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bc5b38a848e6aa448b94840c1fb17a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radio.Dialogue.DialoguePortrait
+  runner: {fileID: 4411540862784189640}
+  dialogue: {fileID: 5280232586047763227}
+  canvasRoot: {fileID: 4335151272529637759}
+  panels:
+  - {fileID: 5970655051094158625}
+  - {fileID: 9059184442579697339}
+  characters:
+  - id: babka
+    clip: {fileID: 32900000, guid: a7baff7789a087e46811685b86f175f9, type: 3}
+  verticalSpan: {x: 0.04, y: 0.92}
+  panelAnchorX: 0.75
 --- !u!1 &6837751233973779211
 GameObject:
   m_ObjectHideFlags: 0

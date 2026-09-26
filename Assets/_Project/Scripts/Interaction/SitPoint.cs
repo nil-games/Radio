@@ -1,5 +1,7 @@
+using System;
 using Radio.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Radio.Interaction
 {
@@ -25,6 +27,13 @@ namespace Radio.Interaction
         [SerializeField] private DeskModeUI deskUI;
 
         private bool _seated;
+        private PlayerInteractor _interactor;
+
+        /// <summary>Игрок сел. Нужно сюжету: часть событий ночи ждёт, пока игрок вернётся за стол.</summary>
+        public event Action SatDown;
+
+        /// <summary>Игрок сейчас сидит в этом кресле.</summary>
+        public bool IsSeated => _seated;
 
         /// <summary>Пока игрок сидит, он занят этим креслом: следующее нажатие поднимет его.</summary>
         public override bool IsExclusive => true;
@@ -107,10 +116,41 @@ namespace Radio.Interaction
 
         private void Update()
         {
+            ReadTurnKeys();
+
             // Пока идёт поворот, стрелки скрыты — возвращаем их, когда он закончился.
             if (_seated && deskView != null && !deskView.IsTurning)
             {
                 RefreshTurnArrows();
+            }
+        }
+
+        /// <summary>
+        /// Q и E поворачивают кресло так же, как стрелки на экране. Пока ввод занят —
+        /// разговор, монитор, мини-игра, — клавиши молчат: у них там своя работа.
+        /// </summary>
+        private void ReadTurnKeys()
+        {
+            if (!_seated || _interactor == null || _interactor.IsInputBlocked)
+            {
+                return;
+            }
+
+            var keyboard = Keyboard.current;
+
+            if (keyboard == null)
+            {
+                return;
+            }
+
+            // Коды позиционные: клавиша на месте Q при любой раскладке.
+            if (keyboard[Key.Q].wasPressedThisFrame)
+            {
+                OnTurnLeftRequested();
+            }
+            else if (keyboard[Key.E].wasPressedThisFrame)
+            {
+                OnTurnRightRequested();
             }
         }
 
@@ -139,12 +179,15 @@ namespace Radio.Interaction
 
             interactor.BeginExclusive(this);
             _seated = true;
+            _interactor = interactor;
 
             if (deskUI != null)
             {
                 deskUI.Show();
                 RefreshTurnArrows();
             }
+
+            SatDown?.Invoke();
         }
 
         private void StandUp(PlayerInteractor interactor)
@@ -175,6 +218,7 @@ namespace Radio.Interaction
 
             interactor.EndExclusive(this);
             _seated = false;
+            _interactor = null;
         }
 
         /// <summary>

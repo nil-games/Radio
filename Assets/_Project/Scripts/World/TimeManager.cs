@@ -29,6 +29,13 @@ namespace Radio.World
         /// </summary>
         public event Action<int, int> TimeAdvanced;
 
+        /// <summary>
+        /// Только для отладки: часы переведены вручную на отметку (в минутах). Приходит
+        /// до самого перевода. События ночи раньше этой отметки должны отмениться:
+        /// звонок, стук, задачи — всё, что относится к прошедшему времени.
+        /// </summary>
+        public event Action<int> DebugJumped;
+
         /// <summary>Часы дошли до 06:00.</summary>
         public event Action ShiftEnded;
 
@@ -77,6 +84,28 @@ namespace Radio.World
             }
 
             SetMinutes(target);
+        }
+
+        /// <summary>
+        /// Только для отладки: поставить часы на любую отметку, в том числе назад.
+        /// Вперёд — как обычный сдвиг, и события на пройденных отметках срабатывают.
+        /// Назад — молча: события уже отыграли, и повторно их запускать нечем.
+        /// </summary>
+        public void DebugSetTime(int hour, int minute)
+        {
+            var target = Mathf.Clamp(hour * 60 + minute, 0, ShiftEndMinutes);
+
+            // До сдвига: события раньше новой отметки должны отмениться прежде,
+            // чем сдвиг даст им сработать.
+            DebugJumped?.Invoke(target);
+
+            if (target > minutes)
+            {
+                SetMinutes(target);
+                return;
+            }
+
+            minutes = target;
         }
 
         private void SetMinutes(int value)

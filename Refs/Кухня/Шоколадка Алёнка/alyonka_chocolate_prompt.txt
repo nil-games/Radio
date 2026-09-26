@@ -1,0 +1,12 @@
+Use case: stylized-concept.
+Reference image: supplied photograph of a vintage Russian Alyonka chocolate bar, used as packaging design reference.
+
+Single game prop asset: one unopened rectangular milk chocolate bar "Алёнка" in its vintage paper wrapper, matching the supplied reference, suitable for a well-kept ordinary Russian apartment of the 1990s–2000s. Preserve the recognizable wrapper: upper dark brown fine crosshatched field, large illustrated blue-eyed child's face framed by a green floral headscarf, pale warm creamy-yellow lower label, red oval manufacturer emblem, olive-brown flowing Cyrillic title "Алёнка", small Cyrillic "МОЛОЧНЫЙ ШОКОЛАД". This request explicitly permits the authentic product name, packaging lettering, and printed brand emblem as exceptions to the usual no-text/no-logo master prompt. No text outside the wrapper. Depict the child only as a flat printed illustration on the packaging, never as a separate person or three-dimensional face. No extra characters.
+
+Shape: slim rigid full-sized chocolate tablet, approximately twice as tall as wide, straight rectangular corners, neatly folded paper wrapper edges, slight visible thickness along the right and bottom sides. Entire bar sealed; no exposed chocolate, no bite, no torn foil. Clean well-maintained pristine wrapper, no dirt, stains, damage, tears or heavy creases.
+
+Stylized cel-shaded 3D render in a hand-drawn comic-book look similar to Borderlands: bold black ink silhouette and major-edge outlines, fine ink detail lines, hand-painted textures and visible restrained brushstrokes, 2–3 step toon shading, subtle hatching on the object, slightly chunky readable proportions. Integrate the wrapper artwork into the same painted comic style while retaining its layout, face, green headscarf, cream label and red oval.
+
+Camera: near frontal view of the large printed face of the wrapper, long axis vertical in the image and title upright, mild perspective from slightly above by 10–15 degrees, slight right-side depth visible, 50mm lens feel. Center the single bar. Entire object fully visible with at least 8 percent clear margin above and below and generous side margins. Square 1:1 composition, sharp detailed image for image-to-3D reference.
+
+Pure solid opaque white #FFFFFF background, no floor, no ground plane, horizon, environment, cast shadow, reflections or vignette. Soft even frontal studio lighting, no dramatic highlights. No hands, plate, stand, extra props, additional bars, watermark, UI or frame.

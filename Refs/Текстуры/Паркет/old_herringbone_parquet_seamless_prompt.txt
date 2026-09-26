@@ -1,0 +1,18 @@
+Use case: stylized-concept
+Asset type: seamless tileable floor material texture for a video game
+
+Create a perfectly seamless full-frame square texture of old parquet flooring typical of a tidy ordinary Russian / post-Soviet apartment from the 1990s–2000s. Traditional classic herringbone layout made from narrow short rectangular wooden parquet blocks, arranged precisely and consistently at 45-degree angles. Correct regular interlocking herringbone geometry, uniform plank dimensions, dense repeated pattern, realistic narrow joints.
+
+Color palette: restrained medium warm honey-brown oak with a slightly amber aged varnish. All parquet blocks must remain very close to one another in tone and saturation. Only minimal natural wood variation between pieces, no checkerboard effect, no alternating light and dark boards, no strongly contrasting planks, no pale boards, no black boards, no red or orange outliers. Quiet cohesive floor surface with an even overall value when viewed from a distance.
+
+The parquet is old but cared for and structurally intact. Age is communicated subtly through a gently dulled satin varnish, softened wood grain and very slight low-contrast variation, not through damage. No dirt, dust, stains, scratches, gouges, cracks, chips, gaps, missing blocks, lifted boards, water damage, mold, blackened seams, paint, debris or heavy wear.
+
+Visual treatment compatible with the existing stylized comic-book apartment assets: restrained hand-painted wood grain, delicate brush texture and subtle 2–3 step color variation. Do not draw bold black outlines around every plank. Joints should be thin, soft dark-brown lines rather than graphic black ink. Material must remain readable as wood while functioning as a calm background floor surface.
+
+The parquet surface fills every pixel from corner to corner. Perfectly flat orthographic top-down texture capture, uniform scale, no perspective, no camera tilt, no room, no walls, no baseboards, no furniture, no objects. Uniform neutral illumination with no baked directional light, shadows, highlights, reflections, ambient occlusion, gradients or vignette.
+
+Seamless requirements: genuinely tileable on all four sides. The herringbone pattern, joints, wood grain and color must continue naturally across the left/right and top/bottom boundaries with no broken blocks, cut-pattern mismatch, border, seam, edge darkening or central focal point. Pattern period must align exactly at opposing edges.
+
+No sample board, swatch, material sphere, floor fragment, frame, margin, white background, transparent area, black corners, text, logo, watermark or UI. High detail, sharp focus, square 1:1 texture suitable for repeated tiling on a 3D floor material.
+
+Final technical processing: reconcile only a narrow strip along each pair of opposite edges, blending corresponding border pixels to an identical value while preserving the natural uninterrupted herringbone layout across the main surface.

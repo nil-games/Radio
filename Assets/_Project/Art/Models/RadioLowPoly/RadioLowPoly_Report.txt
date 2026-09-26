@@ -1,0 +1,6 @@
+RadioLowPoly asset report
+Mesh objects: 10
+Vertices (base meshes): 376
+Polygons (base meshes): 226
+Separate interaction objects: Frequency_Display, Tuning_Knob_Large, Volume_Knob_Small
+Speaker holes are represented by a texture to keep polygon count low.

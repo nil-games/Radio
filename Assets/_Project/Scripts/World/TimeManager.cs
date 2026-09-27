@@ -30,14 +30,20 @@ namespace Radio.World
         public event Action<int, int> TimeAdvanced;
 
         /// <summary>
-        /// Только для отладки: часы переведены вручную на отметку (в минутах). Приходит
-        /// до самого перевода. События ночи раньше этой отметки должны отмениться:
-        /// звонок, стук, задачи — всё, что относится к прошедшему времени.
+        /// Только для отладки: часы переведены вручную на отметку — в минутах от начала
+        /// первой ночи, сквозным счётом (<see cref="TotalMinutes"/>). Приходит до самого
+        /// перевода. События раньше этой отметки должны отмениться, в том числе события
+        /// прошлых ночей: звонок, стук, задачи — всё, что относится к прошедшему времени.
         /// </summary>
         public event Action<int> DebugJumped;
 
         /// <summary>Часы дошли до 06:00.</summary>
         public event Action ShiftEnded;
+
+        /// <summary>
+        /// Началась новая ночь: номер уже сменился, часы стоят на 00:00. Передаёт номер ночи.
+        /// </summary>
+        public event Action<int> NightStarted;
 
         public int Night
         {
@@ -55,6 +61,19 @@ namespace Radio.World
 
         /// <summary>Время для интерфейса: «01:10».</summary>
         public string Clock => $"{Hour:00}:{Minute:00}";
+
+        /// <summary>
+        /// Время вместе с ночью для отладки и правок, «ЧЧ:ММ:НН»: 01:00:02 — час второй ночи.
+        /// Одних часов мало: 01:00 первой и второй ночи — разные моменты игры. Игроку
+        /// не показывается — он видит только <see cref="Clock"/>.
+        /// </summary>
+        public string DebugClock => $"{Clock}:{night:00}";
+
+        /// <summary>
+        /// Минут от начала первой ночи: сквозной счёт через все ночи. Удобен, чтобы
+        /// сравнивать моменты разных ночей одним числом.
+        /// </summary>
+        public int TotalMinutes => (night - 1) * ShiftEndMinutes + minutes;
 
         /// <summary>Сдвинуть часы вперёд на указанное число минут.</summary>
         public void AdvanceBy(int delta)
@@ -87,6 +106,34 @@ namespace Radio.World
         }
 
         /// <summary>
+        /// Начать следующую ночь: номер растёт на один, часы встают на 00:00.
+        /// Зовётся после сна, когда игрок просыпается.
+        /// </summary>
+        public void BeginNextNight() => BeginNight(night + 1);
+
+        /// <summary>
+        /// Начать ночь с указанным номером: часы встают на 00:00. События прошлой ночи
+        /// уже отыграли и повторно не сработают — у каждого своя отметка, пройденная один раз.
+        /// </summary>
+        public void BeginNight(int value)
+        {
+            night = Mathf.Clamp(value, 1, 7);
+            minutes = 0;
+            NightStarted?.Invoke(night);
+        }
+
+        /// <summary>
+        /// Только для отладки: перейти в начало ночи с указанным номером. События
+        /// прошлых ночей, которые ещё не сработали, отменяются.
+        /// </summary>
+        public void DebugBeginNight(int value)
+        {
+            var target = Mathf.Clamp(value, 1, 7);
+            DebugJumped?.Invoke((target - 1) * ShiftEndMinutes);
+            BeginNight(target);
+        }
+
+        /// <summary>
         /// Только для отладки: поставить часы на любую отметку, в том числе назад.
         /// Вперёд — как обычный сдвиг, и события на пройденных отметках срабатывают.
         /// Назад — молча: события уже отыграли, и повторно их запускать нечем.
@@ -97,7 +144,7 @@ namespace Radio.World
 
             // До сдвига: события раньше новой отметки должны отмениться прежде,
             // чем сдвиг даст им сработать.
-            DebugJumped?.Invoke(target);
+            DebugJumped?.Invoke((night - 1) * ShiftEndMinutes + target);
 
             if (target > minutes)
             {

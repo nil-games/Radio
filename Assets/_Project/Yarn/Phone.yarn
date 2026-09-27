@@ -14,6 +14,19 @@ title: Phone_Pickup
 // Ветки проверяются сверху вниз, поэтому конкретные условия идут раньше общих.
 <<if $night == 1 and not $STORY_BOSS_CALL_DONE>>
     <<jump Night1_BossCall>>
+<<elseif $night == 1 and $time_minutes >= 180 and not $STORY_SASHA_CALL_DONE>>
+    // 03:00 — звонок Саши в прямой эфир (Night1_Sasha.yarn).
+    <<jump Night1_SashaCall>>
+// Ночь 2 (время ЧЧ:ММ:НН): начальник 00:00:02, Кравец 01:00:02, запись Серёги
+// на автоответчике 03:00:02, перезвон Кравца 04:30:02.
+<<elseif $night == 2 and not $STORY_N2_BOSS_CALL_DONE>>
+    <<jump Night2_BossCall>>
+<<elseif $night == 2 and $time_minutes >= 270 and not $STORY_N2_POLICE_CALLBACK_DONE>>
+    <<jump Night2_PoliceCallback>>
+<<elseif $night == 2 and $time_minutes >= 180 and not $STORY_N2_RECORD_DONE>>
+    <<jump Night2_SergeyRecord>>
+<<elseif $night == 2 and $time_minutes >= 60 and not $STORY_N2_POLICE_CALL_DONE>>
+    <<jump Night2_PoliceCall>>
 <<else>>
     <<jump Phone_Idle>>
 <<endif>>

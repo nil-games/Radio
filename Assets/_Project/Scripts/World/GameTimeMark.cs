@@ -16,7 +16,8 @@ namespace Radio.World
     [Serializable]
     public struct GameTimeMark
     {
-        [Tooltip("Отметка на часах смены, «ЧЧ:ММ».")]
+        [Tooltip("Отметка на часах смены: «ЧЧ:ММ» — первая ночь, «ЧЧ:ММ:НН» — ночь НН. " +
+                 "01:00:02 — час второй ночи.")]
         public string at;
 
         [Tooltip("Сколько реальных секунд подождать после того, как часы дошли до отметки.")]
@@ -28,18 +29,49 @@ namespace Radio.World
             this.delaySeconds = delaySeconds;
         }
 
-        public bool TryGetMinutes(out int minutes)
-        {
-            minutes = 0;
+        /// <summary>Минут от начала своей ночи: 01:30:02 — это 90.</summary>
+        public bool TryGetMinutes(out int minutes) => TryParse(at, out minutes, out _);
 
-            if (string.IsNullOrWhiteSpace(at))
+        /// <summary>
+        /// Минут от начала первой ночи, сквозь все ночи: 01:30:02 — это 360 + 90.
+        /// Без номера ночи отметка считается отметкой первой ночи.
+        /// </summary>
+        public bool TryGetTotalMinutes(out int total)
+        {
+            total = 0;
+
+            if (!TryParse(at, out var minutes, out var night))
             {
                 return false;
             }
 
-            var parts = at.Split(':');
+            total = (night - 1) * TimeManager.ShiftEndMinutes + minutes;
+            return true;
+        }
 
-            if (parts.Length != 2 || !int.TryParse(parts[0], out var hour) || !int.TryParse(parts[1], out var minute))
+        /// <summary>
+        /// Разбор «ЧЧ:ММ» или «ЧЧ:ММ:НН». Номер ночи по умолчанию — 1: все отметки,
+        /// записанные до появления второй ночи, относятся к первой.
+        /// </summary>
+        public static bool TryParse(string value, out int minutes, out int night)
+        {
+            minutes = 0;
+            night = 1;
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            var parts = value.Split(':');
+
+            if (parts.Length < 2 || parts.Length > 3
+                || !int.TryParse(parts[0], out var hour) || !int.TryParse(parts[1], out var minute))
+            {
+                return false;
+            }
+
+            if (parts.Length == 3 && (!int.TryParse(parts[2], out night) || night < 1))
             {
                 return false;
             }
@@ -60,6 +92,9 @@ namespace Radio.World
     /// Состояние живёт здесь, в компоненте, а не в самой отметке: отметки лежат
     /// в ассетах, а ассет один на все запуски — состояние в нём пережило бы выход
     /// из игры в редакторе.
+    /// Время сравнивается сквозным счётом через все ночи (<see cref="TimeManager.TotalMinutes"/>):
+    /// событие 01:00 первой ночи не сработает второй раз в 01:00 второй, а событие
+    /// второй ночи не сработает в первой.
     /// </remarks>
     public sealed class TimedEvent
     {
@@ -69,13 +104,13 @@ namespace Radio.World
 
         public TimedEvent(GameTimeMark mark)
         {
-            IsValid = mark.TryGetMinutes(out _minutes);
+            IsValid = mark.TryGetTotalMinutes(out _minutes);
             _delay = Mathf.Max(0f, mark.delaySeconds);
         }
 
         public bool IsValid { get; }
 
-        /// <summary>Отметка в минутах от начала смены.</summary>
+        /// <summary>Отметка в минутах от начала первой ночи, сквозным счётом.</summary>
         public int Minutes => _minutes;
 
         /// <summary>Событие уже сработало.</summary>
@@ -95,7 +130,7 @@ namespace Radio.World
                 return false;
             }
 
-            if (time.Minutes < _minutes)
+            if (time.TotalMinutes < _minutes)
             {
                 _reachedAt = -1f;
                 return false;
@@ -116,7 +151,8 @@ namespace Radio.World
         }
 
         /// <summary>
-        /// Отладочный перевод часов на отметку <paramref name="minutes"/>. События более
+        /// Отладочный перевод часов на отметку <paramref name="minutes"/> (сквозной счёт
+        /// через все ночи, как в <see cref="TimeManager.DebugJumped"/>). События более
         /// раннего времени отменяются, даже если уже сработали: компонент по этому
         /// признаку гасит то, что ещё звучит. Возвращает true, если событие отменено.
         /// </summary>

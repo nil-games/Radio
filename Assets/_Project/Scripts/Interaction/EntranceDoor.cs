@@ -1,3 +1,4 @@
+using System;
 using Radio.Dialogue;
 using UnityEngine;
 
@@ -27,13 +28,27 @@ namespace Radio.Interaction
         [Tooltip("Сколько длится открытие или закрытие, с.")]
         [SerializeField] private float openDuration = 0.8f;
 
-        [Header("Гость")]
-        [Tooltip("Стук в дверь. Если за дверью стучат, открытие начинает разговор с гостем. " +
-                 "Пусто — дверь просто открывается.")]
-        [SerializeField] private DoorKnocker knocker;
+        /// <summary>
+        /// Гость за дверью: кто стучит и какой разговор начинается, когда открыли.
+        /// </summary>
+        /// <remarks>
+        /// Гостей за ночь несколько: бабка Зина в 00:30, кошка в 04:00. У каждого свой
+        /// <see cref="DoorKnocker"/> со временем прихода и звуком, дверь просто смотрит,
+        /// кто из них сейчас ждёт.
+        /// </remarks>
+        [Serializable]
+        public struct Visitor
+        {
+            [Tooltip("Кто стучит. Если он сейчас ждёт, открытие двери начинает его разговор.")]
+            public DoorKnocker knocker;
 
-        [Tooltip("Узел .yarn с разговором у порога.")]
-        [SerializeField] private string visitorNode = "Night1_GrannyVisit";
+            [Tooltip("Узел .yarn с разговором у порога.")]
+            public string node;
+        }
+
+        [Header("Гости")]
+        [Tooltip("Пусто — дверь просто открывается.")]
+        [SerializeField] private Visitor[] visitors = Array.Empty<Visitor>();
 
         [Tooltip("Если пусто, ищется в сцене.")]
         [SerializeField] private DialogueController dialogue;
@@ -41,6 +56,7 @@ namespace Radio.Interaction
         private Quaternion _closedRotation;
         private PlayerInteractor _interactor;
         private bool _visitorPending;
+        private string _visitorNode;
         private bool _visitorTalking;
         private float _visitorTimer;
         private float _progress;
@@ -98,12 +114,19 @@ namespace Radio.Interaction
             _target = 1f;
             _interactor = interactor;
 
-            if (knocker != null && knocker.IsKnocking)
+            foreach (var visitor in visitors)
             {
+                if (visitor.knocker == null || !visitor.knocker.IsKnocking)
+                {
+                    continue;
+                }
+
                 // Разговор начинается, когда дверь уже открыта: гость не заговорит сквозь полотно.
-                knocker.Stop();
+                visitor.knocker.Stop();
+                _visitorNode = visitor.node;
                 _visitorPending = true;
                 _visitorTimer = openDuration;
+                break;
             }
         }
 
@@ -149,7 +172,7 @@ namespace Radio.Interaction
                 dialogue = FindAnyObjectByType<DialogueController>();
             }
 
-            if (dialogue == null || string.IsNullOrWhiteSpace(visitorNode))
+            if (dialogue == null || string.IsNullOrWhiteSpace(_visitorNode))
             {
                 Debug.LogError($"{nameof(EntranceDoor)}: гость пришёл, но нет диалога или узла.", this);
                 return;
@@ -157,7 +180,7 @@ namespace Radio.Interaction
 
             _visitorTalking = true;
             dialogue.DialogueFinished += HandleVisitorGone;
-            dialogue.StartDialogue(visitorNode);
+            dialogue.StartDialogue(_visitorNode);
         }
 
         private void HandleVisitorGone()

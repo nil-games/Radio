@@ -48,6 +48,15 @@ namespace Radio.UI
         private RectTransform _list;
         private CanvasGroup _panel;
 
+        /// <summary>
+        /// Нижний край панели задач от верха экрана, в единицах холста (эталон 1920×1080).
+        /// По нему другие надписи встают под список, как бы он ни вырос.
+        /// </summary>
+        public float Bottom => _list == null ? 0f : margin.y + _list.rect.height;
+
+        /// <summary>Отступ панели от правого края экрана, в единицах холста.</summary>
+        public float RightMargin => margin.x;
+
         private void Awake()
         {
             if (log == null || font == null)

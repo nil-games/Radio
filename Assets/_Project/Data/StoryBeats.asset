@@ -36,3 +36,82 @@ MonoBehaviour:
     doneFlags:
     - STORY_POLICE_MAIL_ARRIVED
     - KNOW_POLICE_MISSING_GIRL
+  - id: second_broadcast_efir
+    night: 1
+    at: 02:00
+    doneFlags:
+    - STORY_SECOND_BROADCAST_STARTED
+  - id: announcement
+    night: 1
+    at: 02:30
+    doneFlags:
+    - STORY_ANNOUNCEMENT_DONE
+  - id: sasha_call
+    night: 1
+    at: 03:00
+    doneFlags:
+    - STORY_SASHA_CALL_DONE
+  - id: song_choice
+    night: 1
+    at: 03:30
+    doneFlags:
+    - STORY_SONG_CHOSEN
+  - id: cat_visit
+    night: 1
+    at: 04:00
+    doneFlags:
+    - STORY_CAT_VISIT_DONE
+  - id: n2_boss_call
+    night: 2
+    at: 00:00
+    doneFlags:
+    - STORY_N2_BOSS_CALL_DONE
+  - id: n2_broadcast1
+    night: 2
+    at: 00:30
+    doneFlags:
+    - STORY_N2_BC1_WIN
+    - STORY_N2_BROADCAST1_DONE
+  - id: n2_police_call
+    night: 2
+    at: 01:00
+    doneFlags:
+    - STORY_N2_POLICE_CALL_DONE
+    - STORY_N2_POLICE_MAIL_ARRIVED
+  - id: n2_zina
+    night: 2
+    at: 01:30
+    doneFlags:
+    - STORY_N2_ZINA_DONE
+  - id: n2_broadcast2
+    night: 2
+    at: 02:00
+    doneFlags:
+    - STORY_N2_BC2_WIN
+    - STORY_N2_BROADCAST2_DONE
+  - id: n2_plumber
+    night: 2
+    at: 02:30
+    doneFlags:
+    - STORY_N2_PLUMBER_DONE
+  - id: n2_record
+    night: 2
+    at: 03:00
+    doneFlags:
+    - STORY_N2_RECORD_DONE
+  - id: n2_broadcast3
+    night: 2
+    at: 03:30
+    doneFlags:
+    - STORY_N2_BC3_WIN
+    - STORY_N2_BROADCAST3_DONE
+  - id: n2_alisa_radio
+    night: 2
+    at: 04:00
+    doneFlags:
+    - STORY_N2_ALISA_RADIO_DONE
+  - id: n2_police_callback
+    night: 2
+    at: 04:30
+    doneFlags:
+    - STORY_N2_POLICE_CALLBACK_DONE

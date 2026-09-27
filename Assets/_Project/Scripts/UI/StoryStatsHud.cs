@@ -8,8 +8,8 @@ using UnityEngine.InputSystem;
 namespace Radio.UI
 {
     /// <summary>
-    /// Левый верхний угол: «Это будет иметь последствия», когда меняется параметр сюжета,
-    /// и отладочная сводка всех параметров по правому Ctrl.
+    /// «Это будет иметь последствия» под списком задач, когда меняется параметр сюжета,
+    /// и отладочная сводка всех параметров по правому Ctrl в левом верхнем углу.
     /// </summary>
     /// <remarks>
     /// Надпись срабатывает на настоящее изменение, а не на каждую запись: прибавка к уже
@@ -29,6 +29,10 @@ namespace Radio.UI
         [Tooltip("Шрифт подписей. Обязан содержать кириллицу.")]
         [SerializeField] private TMP_FontAsset font;
 
+        [Tooltip("Список задач: надпись о последствиях встаёт прямо под ним. " +
+                 "Если пусто, ищется в сцене; не нашёлся — надпись в правом верхнем углу.")]
+        [SerializeField] private TaskHud taskHud;
+
         [Header("Последствия")]
         [SerializeField] private string message = "Это будет иметь последствия";
 
@@ -37,7 +41,17 @@ namespace Radio.UI
 
         [SerializeField] private float fadeTime = 0.35f;
 
-        [SerializeField] private Color messageColor = new Color(1f, 0.85f, 0.55f, 0.95f);
+        [SerializeField] private Color messageColor = Color.black;
+
+        [Tooltip("Обводка надписи: чёрный текст без неё теряется на тёмной сцене.")]
+        [SerializeField] private Color messageOutlineColor = Color.white;
+
+        [Tooltip("Толщина обводки, доля от 0 до 1 (параметр TextMeshPro).")]
+        [Range(0f, 1f)]
+        [SerializeField] private float messageOutlineWidth = 0.2f;
+
+        [Tooltip("Зазор между списком задач и надписью, в единицах холста.")]
+        [SerializeField] private float gapBelowTasks = 12f;
 
         [Header("Вид")]
         [Tooltip("Порядок холста. Выше диалога и мини-игр, как у списка задач.")]
@@ -47,6 +61,9 @@ namespace Radio.UI
 
         [SerializeField] private Color debugColor = new Color(0.6f, 1f, 0.6f, 0.95f);
 
+        [Tooltip("Через сколько секунд после четвёртой цифры время применяется без номера ночи.")]
+        [SerializeField] private float timeOnlyDelay = 1.2f;
+
         [Tooltip("Через сколько секунд без нажатий недобранные цифры времени сбрасываются.")]
         [SerializeField] private float timeInputTimeout = 3f;
 
@@ -54,6 +71,7 @@ namespace Radio.UI
         private readonly StringBuilder _debugText = new StringBuilder();
 
         private CanvasGroup _messageGroup;
+        private RectTransform _messageRect;
         private TextMeshProUGUI _debugLabel;
         private float _hideAt = float.NegativeInfinity;
         private bool _toggleHeld;
@@ -86,6 +104,11 @@ namespace Radio.UI
             if (time == null && GameSession.Current != null)
             {
                 time = GameSession.Current.Time;
+            }
+
+            if (taskHud == null)
+            {
+                taskHud = FindAnyObjectByType<TaskHud>();
             }
 
             if (world == null)
@@ -129,6 +152,13 @@ namespace Radio.UI
             var step = Time.unscaledDeltaTime / Mathf.Max(0.01f, fadeTime);
             _messageGroup.alpha = Mathf.MoveTowards(_messageGroup.alpha, visible ? 1f : 0f, step);
 
+            // Каждый кадр, пока надпись видна: список задач меняет высоту, когда задачи
+            // приходят и уходят, и надпись должна ехать вместе с его нижним краем.
+            if (_messageGroup.alpha > 0f)
+            {
+                PlaceMessage();
+            }
+
             if (!Debug.isDebugBuild)
             {
                 return;
@@ -158,8 +188,10 @@ namespace Radio.UI
         }
 
         /// <summary>
-        /// Пока сводка открыта, четыре цифры подряд ставят часы смены: 0130 — это 01:30.
-        /// Верхний ряд и цифровой блок равноправны.
+        /// Пока сводка открыта, цифры подряд переводят часы в формате ЧЧММНН:
+        /// шесть цифр — время и ночь (010002 — 01:00 второй ночи), четыре цифры — время
+        /// в текущей ночи (0130 — 01:30). Четыре цифры применяются после короткой паузы,
+        /// чтобы успеть добрать номер ночи. Верхний ряд и цифровой блок равноправны.
         /// </summary>
         private void ReadTimeInput(Keyboard keyboard)
         {
@@ -168,7 +200,14 @@ namespace Radio.UI
                 return;
             }
 
-            if (_timeInput.Length > 0 && Time.unscaledTime - _timeInputAt > timeInputTimeout)
+            var idle = Time.unscaledTime - _timeInputAt;
+
+            if (_timeInput.Length == 4 && idle > timeOnlyDelay)
+            {
+                ApplyTimeInput();
+                RefreshDebug();
+            }
+            else if (_timeInput.Length > 0 && idle > timeInputTimeout)
             {
                 _timeInput.Clear();
                 RefreshDebug();
@@ -184,7 +223,7 @@ namespace Radio.UI
             _timeInput.Append((char)('0' + digit));
             _timeInputAt = Time.unscaledTime;
 
-            if (_timeInput.Length == 4)
+            if (_timeInput.Length == 6)
             {
                 ApplyTimeInput();
             }
@@ -196,6 +235,7 @@ namespace Radio.UI
         {
             var hour = (_timeInput[0] - '0') * 10 + (_timeInput[1] - '0');
             var minute = (_timeInput[2] - '0') * 10 + (_timeInput[3] - '0');
+            var night = _timeInput.Length == 6 ? (_timeInput[4] - '0') * 10 + (_timeInput[5] - '0') : -1;
             var typed = _timeInput.ToString();
             _timeInput.Clear();
 
@@ -210,11 +250,25 @@ namespace Radio.UI
                 return;
             }
 
+            if (night != -1 && (night < 1 || night > 7))
+            {
+                Debug.LogWarning($"{nameof(StoryStatsHud)}: ночи {night} нет, их 1–7.", this);
+                return;
+            }
+
+            var before = time.DebugClock;
+
+            // Другая ночь — сперва начинаем её с 00:00, потом переводим часы внутри неё,
+            // как при обычном вводе: события раньше отметки отменяют себя сами.
+            if (night != -1 && night != time.Night)
+            {
+                time.DebugBeginNight(night);
+            }
+
             // События и задачи более раннего времени отменяют себя сами,
             // по TimeManager.DebugJumped.
-            var before = time.Clock;
             time.DebugSetTime(hour, minute);
-            Debug.Log($"{nameof(StoryStatsHud)}: часы смены {before} → {time.Clock}, " +
+            Debug.Log($"{nameof(StoryStatsHud)}: часы смены {before} → {time.DebugClock}, " +
                       "события более раннего времени отменены.", this);
         }
 
@@ -284,14 +338,15 @@ namespace Radio.UI
 
             if (time != null)
             {
-                _debugText.Append("GameTime: ").Append(time.Clock)
-                          .Append("  <alpha=#88>[ночь ").Append(time.Night).Append(", ")
-                          .Append(time.Minutes).Append(" / ").Append(TimeManager.ShiftEndMinutes).Append(" мин]<alpha=#FF>\n");
+                _debugText.Append("GameTime: ").Append(time.DebugClock)
+                          .Append("  <alpha=#88>[ЧЧ:ММ:ночь, ").Append(time.Minutes).Append(" / ").Append(TimeManager.ShiftEndMinutes)
+                          .Append(" мин]<alpha=#FF>\n");
 
                 // Подсказка и уже набранные цифры: ввод вслепую легко сбить.
-                var typed = _timeInput.ToString().PadRight(4, '_');
+                var typed = _timeInput.ToString().PadRight(6, '_');
                 _debugText.Append("<alpha=#88>Ввести время: ").Append(typed, 0, 2).Append(':').Append(typed, 2, 2)
-                          .Append(" (4 цифры)<alpha=#FF>\n");
+                          .Append(':').Append(typed, 4, 2)
+                          .Append(" (6 цифр — с ночью, 4 — в текущей ночи)<alpha=#FF>\n");
             }
 
             _debugLabel.text = _debugText.ToString();
@@ -319,8 +374,16 @@ namespace Radio.UI
             scaler.matchWidthOrHeight = 0.5f;
 
             // Рейкастера на холсте нет намеренно: надписи не должны перехватывать клики.
-            var messageLabel = CreateText("Consequences", message, 30f, messageColor, new Vector2(margin.x, -margin.y));
+            var messageLabel = CreateText("Consequences", message, 30f, messageColor, Vector2.zero);
             messageLabel.fontStyle = FontStyles.Italic;
+            messageLabel.outlineColor = messageOutlineColor;
+            messageLabel.outlineWidth = messageOutlineWidth;
+            messageLabel.alignment = TextAlignmentOptions.TopRight;
+            _messageRect = messageLabel.rectTransform;
+            _messageRect.anchorMin = Vector2.one;
+            _messageRect.anchorMax = Vector2.one;
+            _messageRect.pivot = Vector2.one;
+            PlaceMessage();
             _messageGroup = messageLabel.gameObject.AddComponent<CanvasGroup>();
             _messageGroup.alpha = 0f;
             _messageGroup.blocksRaycasts = false;
@@ -328,6 +391,17 @@ namespace Radio.UI
             // Сводка ниже надписи, чтобы они не перекрывали друг друга.
             _debugLabel = CreateText("StatsDebug", string.Empty, 22f, debugColor, new Vector2(margin.x, -margin.y - 48f));
             _debugLabel.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Надпись встаёт под список задач, выровненная по его правому краю. Холсты у них
+        /// с одним эталонным разрешением, поэтому единицы совпадают.
+        /// </summary>
+        private void PlaceMessage()
+        {
+            var top = taskHud != null ? taskHud.Bottom + gapBelowTasks : margin.y;
+            var right = taskHud != null ? taskHud.RightMargin : margin.x;
+            _messageRect.anchoredPosition = new Vector2(-right, -top);
         }
 
         private TextMeshProUGUI CreateText(string objectName, string text, float size, Color color, Vector2 position)

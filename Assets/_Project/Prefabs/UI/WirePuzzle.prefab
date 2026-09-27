@@ -530,10 +530,52 @@ MonoBehaviour:
   dialogue: {fileID: 0}
   root: {fileID: 768699395829076700}
   wire: {fileID: 5304507038788836157}
-  wireLevels:
-  - {fileID: 11400000, guid: 4f08d41777ef99a498d41802bb18717b, type: 2}
-  - {fileID: 11400000, guid: c61eb3c5c16b7fe44846b836a7795071, type: 2}
-  successFlag: STORY_FIRST_BROADCAST_STARTED
+  runs:
+  - id: night1_broadcast1
+    from: 00:00
+    task: start_broadcast
+    levels:
+    - {fileID: 11400000, guid: 4f08d41777ef99a498d41802bb18717b, type: 2}
+    - {fileID: 11400000, guid: c61eb3c5c16b7fe44846b836a7795071, type: 2}
+    successFlag: STORY_FIRST_BROADCAST_STARTED
+    nextTask: 
+    timeAfterWin: 00:30
+  - id: night1_broadcast2
+    from: 02:00
+    task: start_broadcast_2
+    levels:
+    - {fileID: 11400000, guid: 84557d191203bf64c9ad9680bd1196c3, type: 2}
+    - {fileID: 11400000, guid: 0d3306c4b5d4db846bdd0e05c4b97e5c, type: 2}
+    successFlag: STORY_SECOND_BROADCAST_STARTED
+    nextTask: 
+    timeAfterWin: 02:30
+  - id: night2_broadcast1
+    from: 00:30:02
+    task: n2_broadcast1
+    levels:
+    - {fileID: 11400000, guid: 84557d191203bf64c9ad9680bd1196c3, type: 2}
+    - {fileID: 11400000, guid: 0d3306c4b5d4db846bdd0e05c4b97e5c, type: 2}
+    successFlag: STORY_N2_BC1_WIN
+    nextTask: n2_talk
+    timeAfterWin: 
+  - id: night2_broadcast2
+    from: 02:00:02
+    task: n2_broadcast2
+    levels:
+    - {fileID: 11400000, guid: 84557d191203bf64c9ad9680bd1196c3, type: 2}
+    - {fileID: 11400000, guid: 0d3306c4b5d4db846bdd0e05c4b97e5c, type: 2}
+    successFlag: STORY_N2_BC2_WIN
+    nextTask: n2_choose_ad
+    timeAfterWin: 
+  - id: night2_broadcast3
+    from: 03:30:02
+    task: n2_broadcast3
+    levels:
+    - {fileID: 11400000, guid: 84557d191203bf64c9ad9680bd1196c3, type: 2}
+    - {fileID: 11400000, guid: 0d3306c4b5d4db846bdd0e05c4b97e5c, type: 2}
+    successFlag: STORY_N2_BC3_WIN
+    nextTask: n2_tamara_call
+    timeAfterWin: 
 --- !u!82 &9213478186177823184
 AudioSource:
   m_ObjectHideFlags: 0

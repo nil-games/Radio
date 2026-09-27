@@ -33,6 +33,16 @@ title: Night1_Declarations
 <<declare $STORY_FOUND_SERGEY_JACKET = false>>
 <<declare $STORY_FIRST_BROADCAST_STARTED = false>>
 
+// Второй эфир и объявление (сцена 8, 02:30). Флаги объявления — какое из двух выбрано.
+<<declare $STORY_SECOND_BROADCAST_STARTED = false>>
+<<declare $STORY_ANNOUNCEMENT_DONE = false>>
+<<declare $ACTION_AD_BARSIK = false>>
+<<declare $ACTION_AD_MISSING_GIRL = false>>
+
+// Кассета на плеере (сцена 10, 03:30).
+<<declare $STORY_SONG_CHOSEN = false>>
+<<declare $ACTION_SONG_ALISA = false>>
+
 // Вычисляемая переменная: Yarn пересчитывает её при каждом чтении. Её имя стоит
 // на самой куртке в поле доступности, поэтому осмотренная вещь перестаёт ловить
 // прицел без единой строчки кода.

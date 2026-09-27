@@ -8,9 +8,11 @@ namespace Radio.Interaction
     /// Звонящий телефон: тянет звонок, пока игрок не снимет трубку.
     /// </summary>
     /// <remarks>
-    /// Звонок привязан к часам смены плюс задержка в реальных секундах: часы в 00:00 стоят,
-    /// пока игрок бездействует, и без задержки телефон зазвонил бы в первый же кадр.
+    /// Звонков за ночь несколько: начальник в 00:00, Саша в 03:00. Каждый привязан к часам
+    /// смены плюс задержка в реальных секундах: часы в 00:00 стоят, пока игрок бездействует,
+    /// и без задержки телефон зазвонил бы в первый же кадр.
     /// Отладочный перевод часов дальше отметки отменяет звонок и глушит его, если он уже идёт.
+    /// Кто окажется в трубке, решает Phone.yarn, а не этот компонент.
     /// </remarks>
     [RequireComponent(typeof(AudioSource))]
     public sealed class PhoneRinger : MonoBehaviour
@@ -23,13 +25,16 @@ namespace Radio.Interaction
         [Tooltip("Ночи, в которые телефон звонит при входе в квартиру.")]
         [SerializeField] private int[] ringsOnNights = { 1 };
 
-        [Tooltip("Когда зазвонит: отметка на часах смены и задержка в реальных секундах после неё.")]
-        [SerializeField] private GameTimeMark ringAt = new GameTimeMark("00:00", 2f);
+        [Tooltip("Когда звонит: отметки на часах смены и задержка в реальных секундах после каждой.")]
+        [SerializeField] private GameTimeMark[] rings = { new GameTimeMark("00:00", 2f) };
 
         private AudioSource _source;
         private TimeManager _time;
-        private TimedEvent _ring;
+        private TimedEvent[] _rings = Array.Empty<TimedEvent>();
         private bool _armed;
+
+        // Какая отметка звенит сейчас. Минус один — звонок включили не по часам.
+        private int _ringingIndex = -1;
 
         /// <summary>Телефон звонит прямо сейчас. Пока нет — снимать трубку не с чего.</summary>
         public bool IsRinging { get; private set; }
@@ -57,12 +62,16 @@ namespace Radio.Interaction
             _time = GameSession.Current != null ? GameSession.Current.Time : null;
             var night = _time != null ? _time.Night : 1;
             _armed = Array.IndexOf(ringsOnNights, night) >= 0;
-            _ring = new TimedEvent(ringAt);
+            _rings = new TimedEvent[rings.Length];
 
-            if (!_ring.IsValid)
+            for (var i = 0; i < rings.Length; i++)
             {
-                Debug.LogError($"{nameof(PhoneRinger)}: время звонка «{ringAt.at}» не в формате ЧЧ:ММ.", this);
-                _armed = false;
+                _rings[i] = new TimedEvent(rings[i]);
+
+                if (!_rings[i].IsValid)
+                {
+                    Debug.LogError($"{nameof(PhoneRinger)}: время звонка «{rings[i].at}» не в формате ЧЧ:ММ.", this);
+                }
             }
 
             if (_time != null)
@@ -81,15 +90,39 @@ namespace Radio.Interaction
 
         private void Update()
         {
-            if (_armed && !IsRinging && _ring.Poll(_time))
+            if (!_armed || _time == null)
             {
-                StartRinging();
+                return;
+            }
+
+            // Опрашиваем все отметки, даже пока телефон звонит: иначе отметка, пришедшая
+            // во время звонка, сработала бы позже, чем должна.
+            for (var i = 0; i < _rings.Length; i++)
+            {
+                if (_rings[i].IsValid && _rings[i].Poll(_time) && !IsRinging)
+                {
+                    StartRinging();
+                    _ringingIndex = i;
+                }
             }
         }
 
         private void OnDebugJumped(int minutes)
         {
-            if (_ring != null && _ring.SkipIfBefore(minutes))
+            var stop = false;
+
+            for (var i = 0; i < _rings.Length; i++)
+            {
+                // Глушим, только если отменён тот звонок, что звенит сейчас: прошлый,
+                // давно отзвонивший, не повод обрывать нынешний.
+                if (_rings[i].IsValid && _rings[i].SkipIfBefore(minutes)
+                    && (_ringingIndex == i || _ringingIndex < 0))
+                {
+                    stop = true;
+                }
+            }
+
+            if (stop)
             {
                 StopRinging();
             }
@@ -103,7 +136,6 @@ namespace Radio.Interaction
             }
 
             IsRinging = true;
-            _armed = false;
 
             if (ringClip == null)
             {
@@ -124,6 +156,7 @@ namespace Radio.Interaction
             }
 
             IsRinging = false;
+            _ringingIndex = -1;
             _source.Stop();
             RingingStopped?.Invoke();
         }

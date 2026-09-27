@@ -44,9 +44,10 @@ namespace Radio.World
         {
             foreach (var beat in beats.Beats)
             {
-                if (beat.night != _session.Time.Night
-                    || !new GameTimeMark(beat.at).TryGetMinutes(out var mark)
-                    || mark >= minutes)
+                // Сквозной счёт через все ночи: переход во вторую ночь отмечает
+                // пройденными и шаги первой.
+                if (!new GameTimeMark(beat.at).TryGetMinutes(out var mark)
+                    || (beat.night - 1) * TimeManager.ShiftEndMinutes + mark >= minutes)
                 {
                     continue;
                 }

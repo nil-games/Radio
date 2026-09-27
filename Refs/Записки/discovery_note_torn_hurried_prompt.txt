@@ -1,0 +1,14 @@
+Use case: precise-object-edit / stylized-concept
+Asset type: distressed 2D readable note prop texture for a video game
+Input image: previous clean note used as the paper-material and art-style reference
+
+Replace the neat rectangular sheet with a hurriedly torn, irregular scrap of the same warm ivory paper. The silhouette must be visibly asymmetrical and rough: uneven hand-torn top and bottom edges, jagged fibers, small notches, mismatched sloping sides, one missing corner and two bent/crumpled corners. Add several shallow diagonal and horizontal fold creases, minor dents and gentle rumpling across the surface. It should look hastily ripped from a larger sheet, grabbed, folded and reopened—not carefully cut or presented. Keep the paper intact enough for the whole message to remain readable. No burned edges, dirt, blood, water damage or extreme decay.
+
+Remove all existing text from the generated paper base. The exact Russian message will be composited afterward:
+"То что я обнаружил невероятно, но стоит спрятать это, пока я не узнаю больше"
+
+Final handwriting direction: dark blue ballpoint pen written in a rush. Uneven and nervous handwriting with changing letter size, pressure and slant; crooked baselines; inconsistent word spacing; irregular line spacing; lines begin at different horizontal positions and drift slightly up or down. Some letters sit higher or lower, several words are squeezed together, and the last line trails off. The writing should feel urgent and imperfect but remain fully readable. Preserve the exact text and punctuation, with no added signature, date, crossed-out replacement words or extra message.
+
+Preserve the game's master art direction: stylized cel-shaded hand-drawn comic-book look similar to Borderlands, bold irregular ink outline around the torn silhouette, thinner fiber and crease marks, hand-painted paper texture, 2–3 step toon shading and restrained crosshatching. Camera exact straight-on front view, paper nearly parallel to the image plane, centered with the whole irregular silhouette visible and nothing cropped. Pure solid white (#FFFFFF) empty background, no floor, environment or cast shadow. Isolated single note only, no hands, pen, envelope, tape, pins, logos, watermark, UI or frame. High detail, sharp focus, square 1:1.
+
+Final technical compositing: render each word separately using the Cyrillic Segoe Print font with deterministic changes in font size, rotation, baseline, horizontal spacing and blue-ink opacity. Preserve the exact sentence while producing an obviously rushed, crooked layout. Export as opaque RGB PNG.

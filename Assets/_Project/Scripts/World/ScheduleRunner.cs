@@ -125,7 +125,7 @@ namespace Radio.World
 
             foreach (var entry in _queue)
             {
-                if (entry.when.TryGetMinutes(out var mark) && mark >= minutes)
+                if (entry.when.TryGetTotalMinutes(out var mark) && mark >= minutes)
                 {
                     kept.Add(entry);
                 }

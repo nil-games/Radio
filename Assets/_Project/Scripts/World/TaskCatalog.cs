@@ -63,24 +63,11 @@ namespace Radio.World
             }
         }
 
-        private static bool TryParseTime(string clock, out int minutes)
-        {
-            minutes = 0;
-
-            if (string.IsNullOrWhiteSpace(clock))
-            {
-                return false;
-            }
-
-            var parts = clock.Split(':');
-
-            if (parts.Length != 2 || !int.TryParse(parts[0], out var hour) || !int.TryParse(parts[1], out var minute))
-            {
-                return false;
-            }
-
-            minutes = hour * 60 + minute;
-            return true;
-        }
+        /// <summary>
+        /// Время задачи сквозным счётом через все ночи: «ЧЧ:ММ» — первая ночь,
+        /// «ЧЧ:ММ:НН» — ночь НН.
+        /// </summary>
+        private static bool TryParseTime(string clock, out int minutes) =>
+            new GameTimeMark(clock).TryGetTotalMinutes(out minutes);
     }
 }

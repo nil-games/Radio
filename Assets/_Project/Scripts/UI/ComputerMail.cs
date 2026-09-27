@@ -30,6 +30,10 @@ namespace Radio.UI
             [Tooltip("Задача, которая снимается, когда письмо открыли. Пусто — никакая.")]
             public string completesTask;
 
+            [Tooltip("До какого времени довести часы смены, когда письмо открыли, «ЧЧ:ММ». " +
+                     "Пусто — часы не трогать. Уже пройденную отметку часы не откатывают.")]
+            public string timeAfterRead;
+
             public string from;
             public string subject;
 
@@ -169,6 +173,22 @@ namespace Radio.UI
             if (!string.IsNullOrWhiteSpace(message.readFlag) && session != null)
             {
                 session.World.Set(message.readFlag, true);
+            }
+
+            // Прочитанное письмо закрывает сцену, и часы уходят к следующей: к письму
+            // из полиции привязан второй эфир в 02:00.
+            if (!string.IsNullOrWhiteSpace(message.timeAfterRead) && session != null)
+            {
+                var mark = new GameTimeMark(message.timeAfterRead);
+
+                if (mark.TryGetMinutes(out var minutes))
+                {
+                    session.Time.AdvanceTo(minutes / 60, minutes % 60);
+                }
+                else
+                {
+                    Debug.LogError($"{nameof(ComputerMail)}: время «{message.timeAfterRead}» не в формате ЧЧ:ММ.", this);
+                }
             }
 
             if (string.IsNullOrWhiteSpace(message.completesTask))

@@ -1,0 +1,15 @@
+Use case: stylized-concept
+Asset type: 2D readable note prop texture for a video game
+
+Single game prop asset: one ordinary blank writing-paper note sheet from a Russian apartment of the 1990s–2000s. A vertically oriented A5-like rectangular sheet of inexpensive warm ivory/off-white paper with subtle visible paper fibers and restrained hand-painted brush texture. Simple clean straight edges with very slight natural waviness, gently rounded imperfect corners, no tears or missing pieces. The sheet is flat and faces the camera directly. Leave a large clear writing area across the central part of the paper.
+
+The generated base paper must contain no writing, letters, symbols, doodles, printed ruling, holes, stamps or illustrations. The exact handwritten Russian message will be composited afterward to guarantee correct spelling:
+"То что я обнаружил невероятно, но стоит спрятать это, пока я не узнаю больше"
+
+Final text treatment: dark blue ballpoint-pen handwriting using a Cyrillic handwritten font, laid out naturally over five short lines with generous margins. Exact text, exact word order, no missing or duplicated characters, no added signature, date or punctuation. Slightly uneven human baseline and tiny ink-density variation, but fully readable.
+
+Designed for the same video game and master art direction as the other props: stylized cel-shaded hand-drawn comic-book look similar to Borderlands, bold dark ink outline around the paper silhouette, thinner hand-drawn edge details, painterly surface with visible restrained brushstrokes, flat 2–3 step toon shading and subtle crosshatching accents. Authentic simple post-Soviet household paper material.
+
+Condition: clean and gently handled, no dirt, dust, stains, burns, water marks, heavy wrinkles, tears, tape, pins, rust, holes or damage. Camera: exact straight-on orthographic-like front view, paper centered and parallel to the image plane, no perspective distortion, no rotation. The whole sheet is fully visible with even margins and nothing cropped. Pure solid white (#FFFFFF) empty background, no floor, no environment, no cast shadow, no reflections or vignette. Soft even frontal lighting. Isolated single sheet only, no hand, pen, envelope, extra props, logos, watermark, UI or frame. High detail, sharp focus, square 1:1 composition.
+
+Final technical compositing: place the exact Russian text using C:\Windows\Fonts\segoepr.ttf, dark blue ink, inside the detected paper bounds; preserve safe margins and export as opaque RGB PNG.

@@ -1,0 +1,9 @@
+Precise image edit using two references.
+IMAGE 1 is the EDIT TARGET: wide illustrated nighttime Russian apartment radio desk scene with "103.FM_" in the top left, window, microphone, mixing console, CRT monitor, keyboard, plants and desk objects.
+IMAGE 2 is ONLY the replacement CAT IDENTITY reference: seated dark fluffy tabby on white.
+
+Replace ONLY the existing cat behind the mixing console in IMAGE 1 with the exact cat from IMAGE 2. Match its broad serious face, narrowed olive yellow-green eyes, dark charcoal-brown striped fur, forehead markings, pink-brown nose, gray-brown muzzle and chest ruff, pointed ears and hand-drawn fur contours. Preserve its front-facing seated pose and direct gaze toward the viewer. Natural eyes, no red glow, no tentacles or supernatural features.
+
+Place the replacement in exactly the old cat's location behind the console, at approximately the same scale: ear tops and head around the same image coordinates, lower torso and paws naturally occluded by the existing mixing console. Do not place a full-body cutout on top of the desk or cover the console. Integrate the replacement with the scene's dim blue night ambient lighting and restrained warm side illumination; keep its identity legible but no bright white chest, white backdrop, cutout outline or pasted-on look.
+
+STRICT invariants: retain the first image's entire landscape composition, camera, aspect ratio, framing, "103.FM_" typography and placement, room, window view, wallpaper, trailing plants, calendar, CRT screen contents, computer, desk, audio mixer, microphone, notebook, mug, chocolate, cigarettes and ashtray. No changes outside the cat and a tiny local blending boundary around its fur. Do not crop, recompose, add text, change props or change the overall color grading. Preserve the original illustrated game scene art style. Output a complete opaque landscape scene, approximately 16:9, not a standalone cat.

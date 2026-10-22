@@ -4,6 +4,7 @@ using Radio.Interaction;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Video;
 using Yarn.Unity;
 
 namespace Radio.World
@@ -17,10 +18,17 @@ namespace Radio.World
     /// Узел сна берётся по номеру ночи: Night1_Dream, Night2_Dream… Если для ночи узла
     /// нет, на чёрном экране стоит заглушка с подписью. Картинку сна можно положить
     /// в поле «Картинка сна» — она встанет поверх чёрного, под окном разговора.
+    /// Видео сна (по ночам) встаёт туда же и идёт по кругу, пока длится разговор.
     /// Команда не начинает сон сразу, а ждёт конца диалога, как и мини-игра: иначе
     /// затемнение легло бы поверх ещё открытого окна разговора.
+    /// Если для ночи задана сцена сна, вместо текста игрок уходит в неё (квартира
+    /// выгружается, <see cref="MiniLocationTrip"/>). Вернувшись, квартира грузится
+    /// заново, <see cref="SessionRestorer"/> восстанавливает её и зовёт
+    /// <see cref="ResumeAfterDream"/>: этот компонент доигрывает ночь с чёрного экрана —
+    /// конец сна (Night{N}_DreamEnd), утро, титры, пробуждение у дивана.
+    /// Проснувшись, игра сохраняется: начало ночи — точка сохранения (GDD 02.12).
     /// </remarks>
-    public sealed class SleepSequence : MonoBehaviour
+    public sealed class SleepSequence : MonoBehaviour, ISaveBlocker
     {
         [Header("Ссылки")]
         [SerializeField] private DialogueRunner runner;
@@ -36,11 +44,30 @@ namespace Radio.World
         [SerializeField] private float fadeInSeconds = 1.5f;
 
         [Header("Сон")]
-        [Tooltip("Узел разговора во сне. {0} — номер ночи, которая заканчивается.")]
+        [Tooltip("Узел разговора во сне. {0} — номер ночи, которая заканчивается. " +
+                 "Нужен, только если для ночи нет сцены сна.")]
         [SerializeField] private string dreamNodeFormat = "Night{0}_Dream";
+
+        [Tooltip("Сцены сна по ночам: элемент 0 — сон после ночи 1. Пусто — сон текстом " +
+                 "(узел сна). Сцена должна быть в списке сборки.")]
+        [SerializeField] private string[] dreamScenes = System.Array.Empty<string>();
+
+        [Tooltip("Узел после возвращения из сцены сна, на чёрном экране. {0} — номер ночи. " +
+                 "Узла нет — сразу утро.")]
+        [SerializeField] private string dreamEndNodeFormat = "Night{0}_DreamEnd";
 
         [Tooltip("Картинка сна на чёрном фоне. Пусто — только чёрный экран.")]
         [SerializeField] private Sprite dreamImage;
+
+        [Tooltip("Видео на фоне разговора во сне, по ночам: элемент 0 — сон после ночи 1, " +
+                 "элемент 1 — после ночи 2. Нет видео для ночи — картинка или чёрный фон.")]
+        [SerializeField] private VideoClip[] dreamVideos = System.Array.Empty<VideoClip>();
+
+        [Tooltip("Играть звук видео сна.")]
+        [SerializeField] private bool dreamVideoAudio = true;
+
+        [Range(0f, 1f)]
+        [SerializeField] private float dreamVideoVolume = 0.6f;
 
         [Header("Смена ночи")]
         [Tooltip("Надпись после сна, пока экран ещё чёрный. {0} — номер закончившейся ночи. " +
@@ -58,6 +85,17 @@ namespace Radio.World
 
         [Tooltip("Мысли после пробуждения. {0} — номер новой ночи. Узла нет — без мыслей.")]
         [SerializeField] private string wakeNodeFormat = "Night{0}_Wake";
+
+        [Header("Утро")]
+        [Tooltip("Разговор утром, после сна и до титра конца ночи. {0} — номер ночи, " +
+                 "которая заканчивается. Узла нет — утра нет.")]
+        [SerializeField] private string morningNodeFormat = "Night{0}_Morning";
+
+        [Tooltip("Звук перед утренним разговором (звонок телефона). Пусто — без звука.")]
+        [SerializeField] private AudioClip morningSound;
+
+        [Tooltip("Пауза после звука до начала разговора, с.")]
+        [SerializeField] private float morningSoundDelay = 1.5f;
 
         [Tooltip("Сколько держится заглушка, если для ночи нет узла сна, с.")]
         [SerializeField] private float cutsceneSeconds = 3f;
@@ -77,6 +115,10 @@ namespace Radio.World
         private CanvasGroup _fade;
         private TextMeshProUGUI _label;
         private Image _image;
+        private RawImage _video;
+        private AspectRatioFitter _videoFitter;
+        private VideoPlayer _videoPlayer;
+        private RenderTexture _videoTexture;
         private bool _dreamFinished;
         private PlayerInteractor _interactor;
         private bool _pending;
@@ -106,6 +148,9 @@ namespace Radio.World
                 dialogue.DialogueFinished += StartPendingIfAny;
             }
         }
+
+        /// <summary>Сон или утро идут — сохраняться посреди нельзя.</summary>
+        public bool BlocksSave => _pending || _running;
 
         private void OnDestroy()
         {
@@ -142,7 +187,62 @@ namespace Radio.World
             TakeOverPlayer();
 
             yield return Fade(0f, 1f, fadeOutSeconds);
+
+            var dreamScene = DreamSceneFor(GameSession.Current);
+
+            if (!string.IsNullOrEmpty(dreamScene))
+            {
+                // Квартира выгружается; ночь доиграет Resume, когда она загрузится снова.
+                ReleasePlayer();
+                MiniLocationTrip.Leave(dreamScene);
+                yield break;
+            }
+
             yield return PlayCutscene();
+            yield return FinishNight();
+        }
+
+        /// <summary>
+        /// Вернулись из сцены сна: квартира загружена заново и уже восстановлена.
+        /// Экран сразу чёрный — игрок не должен увидеть квартиру до пробуждения, —
+        /// потом ночь доигрывается.
+        /// </summary>
+        public void ResumeAfterDream()
+        {
+            _running = true;
+            _canvas.gameObject.SetActive(true);
+            _fade.gameObject.SetActive(true);
+            _fade.alpha = 1f;
+            TakeOverPlayer();
+            StartCoroutine(ResumeRoutine());
+        }
+
+        private IEnumerator ResumeRoutine()
+        {
+            // Кадр на то, чтобы диалоговая система и остальные успели проснуться.
+            yield return null;
+
+            var session = GameSession.Current;
+            var node = session != null ? string.Format(dreamEndNodeFormat, session.Time.Night) : null;
+
+            if (runner != null && dialogue != null && !string.IsNullOrEmpty(node) && runner.Dialogue.NodeExists(node))
+            {
+                yield return PlayDream(node, false);
+            }
+
+            yield return FinishNight();
+        }
+
+        private string DreamSceneFor(GameSession session)
+        {
+            var index = session != null ? session.Time.Night - 1 : -1;
+            return index >= 0 && index < dreamScenes.Length ? dreamScenes[index] : null;
+        }
+
+        /// <summary>Утро, титры, новая ночь и пробуждение у дивана.</summary>
+        private IEnumerator FinishNight()
+        {
+            yield return PlayMorning();
 
             // Пока экран чёрный: новая ночь и игрок у дивана. Так игрок не увидит ни
             // скачка часов, ни телепорта.
@@ -167,6 +267,12 @@ namespace Radio.World
 
             ReleasePlayer();
             _running = false;
+
+            // Начало ночи — точка сохранения: до первых её событий и мыслей героя.
+            if (session != null && session.TryGetComponent<AutoSaver>(out var saver))
+            {
+                saver.SaveNow(true);
+            }
 
             // Мысли после пробуждения — обычным разговором, уже с управлением.
             var wakeNode = session != null ? string.Format(wakeNodeFormat, session.Time.Night) : null;
@@ -207,10 +313,40 @@ namespace Radio.World
             _label.gameObject.SetActive(false);
         }
 
-        private IEnumerator PlayDream(string node)
+        /// <summary>
+        /// Утро после сна (Night{N}_Morning): например, звонок начальника с итогами смены.
+        /// Идёт на чистом чёрном экране, до титра «Ночь N завершена». Нет узла — нет утра.
+        /// </summary>
+        private IEnumerator PlayMorning()
+        {
+            var session = GameSession.Current;
+            var node = session != null ? string.Format(morningNodeFormat, session.Time.Night) : null;
+
+            if (runner == null || dialogue == null || string.IsNullOrEmpty(node) || !runner.Dialogue.NodeExists(node))
+            {
+                yield break;
+            }
+
+            if (morningSound != null)
+            {
+                AudioSource.PlayClipAtPoint(morningSound, _interactor != null ? _interactor.transform.position : transform.position);
+                yield return new WaitForSeconds(morningSoundDelay);
+            }
+
+            yield return PlayDream(node, false);
+        }
+
+        private IEnumerator PlayDream(string node, bool dreamVisuals = true)
         {
             _image.sprite = dreamImage;
-            _image.gameObject.SetActive(dreamImage != null);
+            _image.gameObject.SetActive(dreamVisuals && dreamImage != null);
+
+            var session = GameSession.Current;
+
+            if (dreamVisuals)
+            {
+                StartDreamVideo(session != null ? session.Time.Night : 1);
+            }
 
             // Чёрный фон опускаем под окно разговора, но оставляем над остальным миром.
             // Задачи и надпись о последствиях при этом видны: выбор во сне тоже меняет сюжет.
@@ -234,6 +370,57 @@ namespace Radio.World
 
             _canvas.sortingOrder = order;
             _image.gameObject.SetActive(false);
+            StopDreamVideo();
+        }
+
+        private void StartDreamVideo(int night)
+        {
+            var index = night - 1;
+            var clip = index >= 0 && index < dreamVideos.Length ? dreamVideos[index] : null;
+
+            if (clip == null)
+            {
+                return;
+            }
+
+            _videoTexture = new RenderTexture((int)clip.width, (int)clip.height, 0) { name = "DreamVideo" };
+            _video.texture = _videoTexture;
+            _videoFitter.aspectRatio = (float)clip.width / clip.height;
+
+            // Прозрачно до первого кадра: иначе мелькнёт мусор из пустой текстуры.
+            _video.color = new Color(1f, 1f, 1f, 0f);
+            _video.gameObject.SetActive(true);
+
+            _videoPlayer.clip = clip;
+            _videoPlayer.targetTexture = _videoTexture;
+            _videoPlayer.audioOutputMode = dreamVideoAudio ? VideoAudioOutputMode.Direct : VideoAudioOutputMode.None;
+
+            if (dreamVideoAudio)
+            {
+                _videoPlayer.SetDirectAudioVolume(0, dreamVideoVolume);
+            }
+
+            _videoPlayer.Prepare();
+        }
+
+        private void OnDreamVideoPrepared(VideoPlayer player)
+        {
+            _video.color = Color.white;
+            player.Play();
+        }
+
+        private void StopDreamVideo()
+        {
+            _videoPlayer.Stop();
+            _video.gameObject.SetActive(false);
+
+            if (_videoTexture != null)
+            {
+                _video.texture = null;
+                _videoTexture.Release();
+                Destroy(_videoTexture);
+                _videoTexture = null;
+            }
         }
 
         private void OnDreamFinished() => _dreamFinished = true;
@@ -356,6 +543,26 @@ namespace Radio.World
             _image.preserveAspect = true;
             _image.raycastTarget = false;
             imageObject.SetActive(false);
+
+            // Видео сна заполняет экран целиком: лишнее по краям обрезается.
+            var videoObject = new GameObject("DreamVideo", typeof(RectTransform));
+            var videoRect = (RectTransform)videoObject.transform;
+            videoRect.SetParent(canvasObject.transform, false);
+            videoRect.anchorMin = Vector2.zero;
+            videoRect.anchorMax = Vector2.one;
+            videoRect.offsetMin = Vector2.zero;
+            videoRect.offsetMax = Vector2.zero;
+            _videoFitter = videoObject.AddComponent<AspectRatioFitter>();
+            _videoFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            _video = videoObject.AddComponent<RawImage>();
+            _video.raycastTarget = false;
+            _videoPlayer = videoObject.AddComponent<VideoPlayer>();
+            _videoPlayer.playOnAwake = false;
+            _videoPlayer.isLooping = true;
+            _videoPlayer.source = VideoSource.VideoClip;
+            _videoPlayer.renderMode = VideoRenderMode.RenderTexture;
+            _videoPlayer.prepareCompleted += OnDreamVideoPrepared;
+            videoObject.SetActive(false);
 
             _fade = canvasObject.AddComponent<CanvasGroup>();
             _fade.alpha = 0f;

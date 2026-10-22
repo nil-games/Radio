@@ -35,6 +35,15 @@ namespace Radio.Interaction
                  "Пусто — без задачи.")]
         [SerializeField] private string taskId = "door_knock";
 
+        [Header("Если не открыли")]
+        [Tooltip("Через сколько реальных секунд ожидания гость стучит последний раз и уходит. " +
+                 "Пока идёт разговор, ожидание не считается. 0 — ждёт, пока не откроют.")]
+        [SerializeField] private float giveUpAfter;
+
+        [Tooltip("Узел диалога, который запускается, когда гость ушёл сам: в нём ставится " +
+                 "флаг конца визита и двигаются часы. Пусто — гость просто перестаёт стучать.")]
+        [SerializeField] private string giveUpNode;
+
         [Header("Ссылки")]
         [Tooltip("Если пусто, ищется в сцене.")]
         [SerializeField] private PlayerInteractor interactor;
@@ -48,6 +57,10 @@ namespace Radio.Interaction
         private bool _arrived;
         private bool _remindedOnStandUp;
         private bool _wasSuspended;
+        private bool _answered;
+        private bool _gaveUp;
+        private float _waited;
+        private Radio.Dialogue.DialogueController _dialogue;
 
         /// <summary>Гость стоит за дверью и ждёт.</summary>
         public bool IsKnocking { get; private set; }
@@ -66,7 +79,7 @@ namespace Radio.Interaction
         private void Start()
         {
             _time = GameSession.Current != null ? GameSession.Current.Time : null;
-            _arrival = new TimedEvent(arriveAt);
+            _arrival = new TimedEvent(arriveAt, TimedEvent.KeyFor(this));
 
             if (!_arrival.IsValid)
             {
@@ -118,18 +131,58 @@ namespace Radio.Interaction
             }
 
             _wasSuspended = suspended;
+            TickGiveUp();
         }
 
         /// <summary>Дверь открыли: гость дождался, стук обрывается.</summary>
         public void Stop()
         {
             IsKnocking = false;
+            _answered = true;
             _source.Stop();
+        }
+
+        /// <summary>
+        /// Гость не дождался: последний стук, и он уходит сам. Ждёт только реальное время
+        /// вне разговоров — пока игрок читает другой диалог, гость не теряет терпение.
+        /// </summary>
+        private void TickGiveUp()
+        {
+            if (giveUpAfter <= 0f || !IsKnocking || _answered || _gaveUp)
+            {
+                return;
+            }
+
+            if (_dialogue == null)
+            {
+                _dialogue = FindAnyObjectByType<Radio.Dialogue.DialogueController>();
+            }
+
+            if (_dialogue != null && _dialogue.IsRunning)
+            {
+                return;
+            }
+
+            _waited += Time.deltaTime;
+
+            if (_waited < giveUpAfter)
+            {
+                return;
+            }
+
+            _gaveUp = true;
+            IsKnocking = false;
+            KnockOnce();
+
+            if (!string.IsNullOrWhiteSpace(giveUpNode) && _dialogue != null)
+            {
+                _dialogue.StartDialogue(giveUpNode);
+            }
         }
 
         private bool GuestWaiting()
         {
-            if (_arrival == null || !_arrival.Fired || _arrival.Skipped)
+            if (_gaveUp || _arrival == null || !_arrival.Fired || _arrival.Skipped)
             {
                 return false;
             }

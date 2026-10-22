@@ -29,6 +29,10 @@ namespace Radio.Dialogue
         [Tooltip("Что можно поставить из диалога. В команде запись называется по имени клипа.")]
         [SerializeField] private AudioClip[] tapes;
 
+        [Tooltip("Папка с записями: всё, что в ней лежит, тоже можно поставить по имени файла. " +
+                 "Удобно для песен — положил mp3 в папку, и он уже на кассете, список выше трогать не нужно.")]
+        [SerializeField] private Radio.Audio.MusicPlaylist folder;
+
         [Header("Подсказка")]
         [Tooltip("Задача-подсказка, которая висит, пока играет запись: появляется при запуске " +
                  "и снимается, когда запись кончилась или её заглушили. Пусто — никакой.")]
@@ -122,16 +126,22 @@ namespace Radio.Dialogue
 
         private AudioClip Find(string tapeName)
         {
-            if (tapes == null)
-            {
-                return null;
-            }
-
-            foreach (var tape in tapes)
+            foreach (var tape in tapes ?? System.Array.Empty<AudioClip>())
             {
                 if (tape != null && tape.name == tapeName)
                 {
                     return tape;
+                }
+            }
+
+            if (folder != null)
+            {
+                foreach (var tape in folder.Tracks)
+                {
+                    if (tape != null && tape.name == tapeName)
+                    {
+                        return tape;
+                    }
                 }
             }
 

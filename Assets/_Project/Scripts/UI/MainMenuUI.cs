@@ -14,10 +14,10 @@ namespace Radio.UI
         [Tooltip("ИГРАТЬ — загружает игровую сцену.")]
         [SerializeField] private Button playButton;
 
-        [Tooltip("ПРОДОЛЖИТЬ — пока ничего не делает, обработчик появится позже.")]
+        [Tooltip("ПРОДОЛЖИТЬ — сохранений пока нет, показывает фразу-заглушку.")]
         [SerializeField] private Button continueButton;
 
-        [Tooltip("НАСТРОЙКИ — пока ничего не делают, обработчик появится позже.")]
+        [Tooltip("НАСТРОЙКИ — настроек пока нет, показывают фразу-заглушку.")]
         [SerializeField] private Button settingsButton;
 
         [Tooltip("НЕ НАЖИМАТЬ! — показывает случайную фразу.")]
@@ -35,7 +35,23 @@ namespace Radio.UI
                  "По имени, а не по индексу: индекс поедет, как только добавят новые сцены.")]
         [SerializeField] private string gameplaySceneName = "Apartment";
 
+        [Tooltip("Вступительный ролик перед игрой. Пусто — сразу в игровую сцену.")]
+        [SerializeField] private IntroVideo intro;
+
+        [Header("Сохранение")]
+        [Tooltip("Фраза на ПРОДОЛЖИТЬ, когда сохранения нет.")]
+        [SerializeField] private string noSaveText = "Сохранений нет";
+
+        [Tooltip("Фраза на ИГРАТЬ, когда сохранение есть: второе нажатие начинает заново.")]
+        [SerializeField] private string overwriteText = "Сохранение будет перезаписано. Нажми ещё раз";
+
+        [Header("Заглушки")]
+
+        [Tooltip("Фраза на НАСТРОЙКИ, пока их нет.")]
+        [SerializeField] private string settingsStubText = "Их нет";
+
         private bool _initialized;
+        private bool _confirmNewGame;
 
         private void Awake() => EnsureInitialized();
 
@@ -45,7 +61,7 @@ namespace Radio.UI
         {
             if (playButton != null)
             {
-                playButton.onClick.RemoveListener(StartGame);
+                playButton.onClick.RemoveListener(NewGame);
             }
 
             if (doNotPressButton != null)
@@ -56,6 +72,16 @@ namespace Radio.UI
             if (quitButton != null)
             {
                 quitButton.onClick.RemoveListener(QuitGame);
+            }
+
+            if (continueButton != null)
+            {
+                continueButton.onClick.RemoveListener(ContinueGame);
+            }
+
+            if (settingsButton != null)
+            {
+                settingsButton.onClick.RemoveListener(ShowSettingsStub);
             }
         }
 
@@ -79,19 +105,80 @@ namespace Radio.UI
 
             _initialized = true;
 
-            playButton.onClick.AddListener(StartGame);
+            playButton.onClick.AddListener(NewGame);
             doNotPressButton.onClick.AddListener(ShowPhrase);
             quitButton.onClick.AddListener(QuitGame);
 
-            // ПРОДОЛЖИТЬ и НАСТРОЙКИ намеренно остаются без обработчиков и включёнными:
+            // ПРОДОЛЖИТЬ без сохранения и НАСТРОЙКИ намеренно остаются включёнными и отвечают фразой:
             // штатная подсветка выключенной кнопки роняет плашку до половинной
             // прозрачности и обесцвечивает светящийся текст — на тёмном фоне это
             // читается как «картинка не загрузилась», а не «пока недоступно».
+            if (continueButton != null)
+            {
+                continueButton.onClick.AddListener(ContinueGame);
+            }
+
+            if (settingsButton != null)
+            {
+                settingsButton.onClick.AddListener(ShowSettingsStub);
+            }
         }
 
-        private void StartGame() => SceneManager.LoadScene(gameplaySceneName);
+        /// <summary>
+        /// Новая игра. Если сохранение есть, первое нажатие только предупреждает:
+        /// слот один, и новая игра перезапишет его первым же автосохранением.
+        /// </summary>
+        private void NewGame()
+        {
+            if (Radio.World.SaveSystem.HasSave && !_confirmNewGame)
+            {
+                _confirmNewGame = true;
+                phrasePlayer.AlignTo((RectTransform)playButton.transform);
+                phrasePlayer.Play(overwriteText);
+                return;
+            }
 
-        private void ShowPhrase() => phrasePlayer.Play();
+            StartGame();
+        }
+
+        /// <summary>«Продолжить»: загрузить сохранение без вступительного ролика.</summary>
+        private void ContinueGame()
+        {
+            var data = Radio.World.SaveSystem.Load();
+
+            if (data == null)
+            {
+                phrasePlayer.AlignTo((RectTransform)continueButton.transform);
+                phrasePlayer.Play(noSaveText);
+                return;
+            }
+
+            Radio.World.SaveSystem.PendingLoad = data;
+            SceneManager.LoadScene(data.scene);
+        }
+
+        private void StartGame()
+        {
+            if (intro != null)
+            {
+                intro.Play(gameplaySceneName);
+                return;
+            }
+
+            SceneManager.LoadScene(gameplaySceneName);
+        }
+
+        private void ShowPhrase()
+        {
+            phrasePlayer.AlignTo((RectTransform)doNotPressButton.transform);
+            phrasePlayer.Play();
+        }
+
+        private void ShowSettingsStub()
+        {
+            phrasePlayer.AlignTo((RectTransform)settingsButton.transform);
+            phrasePlayer.Play(settingsStubText);
+        }
 
         private void QuitGame()
         {

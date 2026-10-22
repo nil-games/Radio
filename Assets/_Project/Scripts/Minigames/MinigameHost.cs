@@ -16,7 +16,7 @@ namespace Radio.Minigames
     /// появляется, когда диалог закроется. Иначе сетка легла бы поверх ещё идущего
     /// разговора, и игрок читал бы реплику сквозь провод.
     /// </remarks>
-    public sealed class MinigameHost : MonoBehaviour
+    public sealed class MinigameHost : MonoBehaviour, ISaveBlocker
     {
         [Header("Ссылки")]
         [SerializeField] private DialogueRunner runner;
@@ -27,6 +27,20 @@ namespace Radio.Minigames
         [SerializeField] private GameObject root;
 
         [SerializeField] private WirePuzzleGame wire;
+
+        [Tooltip("Эфир за столом (GDD 02.22). Им сейчас идут все выходы в эфир.")]
+        [SerializeField] private Radio.Broadcast.BroadcastGame broadcast;
+
+        /// <summary>Чем играется запуск.</summary>
+        public enum RunKind
+        {
+            [Tooltip("Эфир за столом: заявки слушателей и кассеты (GDD 02.22).")]
+            Broadcast = 0,
+
+            [Tooltip("«Провода»: поле-клавиатура с проводом (бывший «Эфир», GDD 02.3). " +
+                     "Сейчас не используется, ждёт другого применения.")]
+            Wire = 1,
+        }
 
         /// <summary>
         /// Один эфир ночи: с какого времени он открыт, какие уровни идут подряд
@@ -43,15 +57,18 @@ namespace Radio.Minigames
             [Tooltip("Для логов и инспектора. В игре не показывается.")]
             public string id;
 
+            [Tooltip("Что открывается: эфир за столом или «Провода».")]
+            public RunKind kind;
+
             [Tooltip("С какого времени эфир открыт: «ЧЧ:ММ» — первая ночь, «ЧЧ:ММ:НН» — ночь НН.")]
             public string from;
 
             [Tooltip("Задача, которая снимается при запуске эфира. Пусто — никакая.")]
             public string task;
 
-            [Tooltip("Уровни, которые идут подряд. Прошёл один — сразу следующий, поле не " +
-                     "закрывается и музыка не прерывается. Один и тот же ассет можно поставить " +
-                     "дважды: провод каждый раз новый.")]
+            [Tooltip("Только для «Проводов»: уровни, которые идут подряд. Прошёл один — сразу " +
+                     "следующий, поле не закрывается и музыка не прерывается. Один и тот же ассет " +
+                     "можно поставить дважды: провод каждый раз новый.")]
             public WirePuzzle[] levels;
 
             [Tooltip("Флаг мира, который ставится после победы. Пусто — ничего не ставить.")]
@@ -60,6 +77,10 @@ namespace Radio.Minigames
             [Tooltip("Задача, которая появляется после победы: «Поговорить со слушателями». " +
                      "Пусто — никакая.")]
             public string nextTask;
+
+            [Tooltip("Узел диалога сразу после эфира (погасить «В ЭФИРЕ», мысль героя, " +
+                     "следующая задача). Пусто — без разговора.")]
+            public string afterNode;
 
             [Tooltip("До какого времени довести часы смены после победы, «ЧЧ:ММ». " +
                      "Пусто — часы не трогать. Уже пройденную отметку часы не откатывают.")]
@@ -74,16 +95,22 @@ namespace Radio.Minigames
         private WireRun _run;
         private int _level;
 
+        /// <summary>Мини-игру попросили, но она ещё не началась — сохраниться посреди нельзя.</summary>
+        public bool BlocksSave => _pending;
+
         private void Awake()
         {
-            if (root == null || wire == null || runs.Length == 0)
+            if ((wire == null && broadcast == null) || runs.Length == 0)
             {
-                Debug.LogError($"{nameof(MinigameHost)}: не заданы поле или мини-игра.", this);
+                Debug.LogError($"{nameof(MinigameHost)}: не заданы мини-игры или запуски.", this);
                 enabled = false;
                 return;
             }
 
-            root.SetActive(false);
+            if (root != null)
+            {
+                root.SetActive(false);
+            }
 
             if (runner == null)
             {
@@ -106,8 +133,16 @@ namespace Radio.Minigames
                 dialogue.DialogueFinished += StartPendingIfAny;
             }
 
-            wire.Won += HandleWon;
-            wire.Aborted += HandleAborted;
+            if (wire != null)
+            {
+                wire.Won += HandleWon;
+                wire.Aborted += HandleAborted;
+            }
+
+            if (broadcast != null)
+            {
+                broadcast.Finished += HandleBroadcastFinished;
+            }
         }
 
         private void OnDestroy()
@@ -121,6 +156,11 @@ namespace Radio.Minigames
             {
                 wire.Won -= HandleWon;
                 wire.Aborted -= HandleAborted;
+            }
+
+            if (broadcast != null)
+            {
+                broadcast.Finished -= HandleBroadcastFinished;
             }
         }
 
@@ -143,9 +183,15 @@ namespace Radio.Minigames
 
             _run = runs[index];
 
-            if (runs[index].levels == null || runs[index].levels.Length == 0)
+            if (_run.kind == RunKind.Broadcast && broadcast == null)
             {
-                Debug.LogError($"{nameof(MinigameHost)}: у эфира {_run.id} нет уровней.", this);
+                Debug.LogError($"{nameof(MinigameHost)}: эфир {_run.id} — эфир за столом, но он не подключён.", this);
+                return;
+            }
+
+            if (_run.kind == RunKind.Wire && (wire == null || root == null || _run.levels == null || _run.levels.Length == 0))
+            {
+                Debug.LogError($"{nameof(MinigameHost)}: у «Проводов» {_run.id} нет поля или уровней.", this);
                 return;
             }
 
@@ -220,9 +266,125 @@ namespace Radio.Minigames
 
             _pending = false;
             TakeOverPlayer();
+
+            if (_run.kind == RunKind.Broadcast)
+            {
+                BeginBroadcast();
+                return;
+            }
+
             root.SetActive(true);
             _level = 0;
             BeginLevel();
+        }
+
+        /// <summary>
+        /// Часы на экране эфира идут от начала эфира до отметки после него; если отметки
+        /// нет — на час вперёд (один эфир ≈ один игровой час, GDD 02.22).
+        /// </summary>
+        private void BeginBroadcast()
+        {
+            var session = GameSession.Current;
+            var night = session != null ? session.Time.Night : 1;
+            var now = session != null ? session.Time.Minutes : 0;
+            var end = now + 60;
+
+            if (TryParseClock(_run.timeAfterWin, out var hour, out var minute))
+            {
+                end = Mathf.Max(now, hour * 60 + minute);
+            }
+
+            broadcast.Begin(night, BroadcastNumber(_run), now, end);
+        }
+
+        /// <summary>
+        /// Какой это по счёту эфир своей ночи (1, 2, 3…): по нему лист «Сложность»
+        /// выбирает строку. Считается по отметкам «с какого времени» в списке запусков.
+        /// </summary>
+        private int BroadcastNumber(WireRun run)
+        {
+            if (!new GameTimeMark(run.from).TryGetTotalMinutes(out var total))
+            {
+                return 1;
+            }
+
+            var night = total / TimeManager.ShiftEndMinutes;
+            var number = 1;
+
+            foreach (var other in runs)
+            {
+                if (other.kind == RunKind.Broadcast
+                    && new GameTimeMark(other.from).TryGetTotalMinutes(out var otherTotal)
+                    && otherTotal / TimeManager.ShiftEndMinutes == night
+                    && otherTotal < total)
+                {
+                    number++;
+                }
+            }
+
+            return number;
+        }
+
+        /// <summary>
+        /// Отладка (правый Ctrl, затем B и номер): сразу открыть эфир номер
+        /// <paramref name="number"/> текущей ночи, со сложностью этого эфира. Без микшера,
+        /// без задач и без последствий: флаг, задачи и часы после него не меняются.
+        /// </summary>
+        public void DebugStartBroadcast(int number)
+        {
+            if (broadcast == null || broadcast.Phase != Radio.Broadcast.BroadcastPhase.Idle)
+            {
+                return;
+            }
+
+            var session = GameSession.Current;
+            var night = session != null ? session.Time.Night : 1;
+            var now = session != null ? session.Time.Minutes : 0;
+            _debugRun = true;
+            _pending = false;
+            TakeOverPlayer();
+            broadcast.Begin(night, Mathf.Max(1, number), now, now + 60);
+            Debug.Log($"{nameof(MinigameHost)}: отладка — эфир {number} ночи {night}.", this);
+        }
+
+        private bool _debugRun;
+
+        private void HandleBroadcastFinished(Radio.Broadcast.BroadcastTally tally)
+        {
+            if (_debugRun)
+            {
+                _debugRun = false;
+                ReleasePlayer();
+                return;
+            }
+
+            // Баллы и деньги эфира копятся во флагах мира: их читает утренний разговор
+            // (зарплата), а позже — шкалы сюжета (GDD 02.22). Остальные последствия
+            // пока только в сводке. Дальше — как после победы в «Проводах».
+            var world = GameSession.Current != null ? GameSession.Current.World : null;
+
+            if (world != null)
+            {
+                world.TryGet<float>("BROADCAST_POINTS", out var points);
+                world.TryGet<float>("MONEY", out var money);
+                world.Set("BROADCAST_POINTS", points + tally.Points);
+                world.Set("MONEY", money + tally.Money);
+            }
+
+            HandleWon();
+        }
+
+        private static bool TryParseClock(string value, out int hour, out int minute)
+        {
+            hour = minute = 0;
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            var parts = value.Split(':');
+            return parts.Length >= 2 && int.TryParse(parts[0], out hour) && int.TryParse(parts[1], out minute);
         }
 
         private void BeginLevel()
@@ -256,7 +418,10 @@ namespace Radio.Minigames
 
         private void ReleasePlayer()
         {
-            root.SetActive(false);
+            if (root != null)
+            {
+                root.SetActive(false);
+            }
 
             if (_interactor == null)
             {
@@ -275,7 +440,7 @@ namespace Radio.Minigames
         {
             // Поле не гасим между уровнями: на нём висит музыка, и она должна
             // играть сквозь всю мини-игру, а не начинаться заново.
-            if (++_level < _run.levels.Length)
+            if (_run.kind == RunKind.Wire && ++_level < _run.levels.Length)
             {
                 BeginLevel();
                 return;
@@ -307,6 +472,11 @@ namespace Radio.Minigames
                 {
                     tasks.Add(_run.nextTask);
                 }
+            }
+
+            if (!string.IsNullOrWhiteSpace(_run.afterNode) && dialogue != null)
+            {
+                dialogue.StartDialogue(_run.afterNode);
             }
         }
 

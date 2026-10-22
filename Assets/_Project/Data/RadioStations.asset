@@ -39,3 +39,7 @@ MonoBehaviour:
     frequency: 106.2
     clips:
     - {fileID: 8300000, guid: 4f09a46f644c1b848b98eb8aeedfd4d0, type: 3}
+  - name: "\u041C\u043E\u0440\u0437\u0435"
+    frequency: 94
+    clips:
+    - {fileID: 8300000, guid: e32b234ea16052742828f142d9737984, type: 3}

@@ -1,4 +1,5 @@
 using System;
+using Radio.World;
 using UnityEngine;
 
 namespace Radio.Interaction
@@ -75,11 +76,35 @@ namespace Radio.Interaction
             _music.loop = false;
         }
 
+        /// <summary>Флаг мира: радио включено (сохранение, GDD 02.12).</summary>
+        public const string PowerFlag = "OBJ_RADIO_ON";
+
         private void Start()
         {
             if (onAtStart)
             {
                 SetPower(true);
+            }
+
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.Restored += OnRestored;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.Restored -= OnRestored;
+            }
+        }
+
+        private void OnRestored()
+        {
+            if (GameSession.Current.World.TryGet<bool>(PowerFlag, out var on))
+            {
+                SetPower(on);
             }
         }
 
@@ -110,6 +135,11 @@ namespace Radio.Interaction
                 _noise.Stop();
                 _music.Stop();
                 _station = -1;
+            }
+
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.World.Set(PowerFlag, on);
             }
 
             PowerChanged?.Invoke(on);

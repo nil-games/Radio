@@ -18,6 +18,10 @@ namespace Radio.World
         [Tooltip("Задача из каталога.")]
         [SerializeField] private string taskId = "return_to_desk";
 
+        [Tooltip("Не ставить задачу, если этот флаг мира уже стоит: например, эфир, " +
+                 "который игрок по сюжету пропустил. Пусто — ставить всегда.")]
+        [SerializeField] private string skipIfFlag;
+
         [Tooltip("Если пусто, ищется в сцене.")]
         [SerializeField] private TaskLog tasks;
 
@@ -29,7 +33,7 @@ namespace Radio.World
         // Start, а не Awake: сессия заводится в своём Awake, и порядок между ними не гарантирован.
         private void Start()
         {
-            _event = new TimedEvent(when);
+            _event = new TimedEvent(when, TimedEvent.KeyFor(this));
 
             if (!_event.IsValid)
             {
@@ -68,10 +72,18 @@ namespace Radio.World
 
         private void Update()
         {
-            if (_event.Poll(time))
+            if (!_event.Poll(time))
             {
-                tasks.Add(taskId);
+                return;
             }
+
+            if (!string.IsNullOrWhiteSpace(skipIfFlag) && GameSession.Current != null
+                && GameSession.Current.World.TryGet<bool>(skipIfFlag, out var skip) && skip)
+            {
+                return;
+            }
+
+            tasks.Add(taskId);
         }
 
         private void OnDebugJumped(int minutes) => _event.SkipIfBefore(minutes);

@@ -8,7 +8,7 @@ namespace Radio.World
     /// Следит за часами смены и сам запускает разговоры, привязанные к отметкам времени.
     /// Это те события, которые случаются без участия игрока: звонок, помеха в эфире, стук в дверь.
     /// </summary>
-    public sealed class ScheduleRunner : MonoBehaviour
+    public sealed class ScheduleRunner : MonoBehaviour, ISaveBlocker
     {
         [Header("Данные")]
         [SerializeField] private NightSchedule schedule;
@@ -27,8 +27,11 @@ namespace Radio.World
 
         // Очередь нужна потому, что одно действие игрока может перешагнуть сразу две отметки,
         // а диалоги обязаны идти по очереди, а не наложиться друг на друга.
-        private readonly Queue<NightSchedule.Entry> _queue = new Queue<NightSchedule.Entry>();
+        private readonly Queue<Pending> _queue = new Queue<Pending>();
         private readonly List<Pending> _events = new List<Pending>();
+
+        /// <summary>В очереди ждут разговоры — они ещё не случились, но уже наступили.</summary>
+        public bool BlocksSave => _queue.Count > 0;
 
         // Именно Start, а не Awake: ссылки берутся из GameSession, а порядок Awake
         // между объектами Unity не гарантирует — в Awake сессии могло ещё не быть.
@@ -53,14 +56,23 @@ namespace Radio.World
                 return;
             }
 
+            // События всех ночей сразу, с номером ночи в отметке: ночь меняется без
+            // перезагрузки сцены, а загрузка сохранения ставит любую ночь уже после Start.
             foreach (var entry in schedule.Entries)
             {
-                if (entry.night != time.Night || string.IsNullOrWhiteSpace(entry.yarnNode))
+                if (string.IsNullOrWhiteSpace(entry.yarnNode))
                 {
                     continue;
                 }
 
-                var timed = new TimedEvent(entry.when);
+                var mark = entry.when;
+
+                if (mark.at != null && mark.at.Split(':').Length == 2)
+                {
+                    mark.at += ":" + Mathf.Max(1, entry.night).ToString("00");
+                }
+
+                var timed = new TimedEvent(mark, "Schedule:" + entry.id);
 
                 if (!timed.IsValid)
                 {
@@ -101,7 +113,7 @@ namespace Radio.World
             {
                 if (pending.Event.Poll(time))
                 {
-                    _queue.Enqueue(pending.Entry);
+                    _queue.Enqueue(pending);
                     queued = true;
                 }
             }
@@ -121,21 +133,21 @@ namespace Radio.World
             }
 
             // Из очереди тоже: там могли ждать разговоры, отменённые только что.
-            var kept = new List<NightSchedule.Entry>();
+            var kept = new List<Pending>();
 
-            foreach (var entry in _queue)
+            foreach (var pending in _queue)
             {
-                if (entry.when.TryGetTotalMinutes(out var mark) && mark >= minutes)
+                if (pending.Event.Minutes >= minutes)
                 {
-                    kept.Add(entry);
+                    kept.Add(pending);
                 }
             }
 
             _queue.Clear();
 
-            foreach (var entry in kept)
+            foreach (var pending in kept)
             {
-                _queue.Enqueue(entry);
+                _queue.Enqueue(pending);
             }
         }
 
@@ -146,7 +158,7 @@ namespace Radio.World
                 return;
             }
 
-            dialogue.StartDialogue(_queue.Dequeue().yarnNode);
+            dialogue.StartDialogue(_queue.Dequeue().Entry.yarnNode);
         }
     }
 }

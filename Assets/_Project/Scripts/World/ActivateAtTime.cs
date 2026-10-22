@@ -9,10 +9,14 @@ namespace Radio.World
     /// <remarks>
     /// Висит не на самих объектах, а на ком-то включённом: выключенный объект не получает
     /// ни Start, ни событий и сам себя включить не может.
+    /// Отметка сравнивается сквозным счётом через все ночи: «02:00» — это 02:00 первой
+    /// ночи, «02:00:02» — второй. Так после загрузки сохранения второй ночи вещь,
+    /// появившаяся в первую, на месте (GDD 02.12).
     /// </remarks>
     public sealed class ActivateAtTime : MonoBehaviour
     {
-        [Tooltip("Отметка времени, «ЧЧ:ММ». Включает, когда часы дошли до неё или прошли дальше.")]
+        [Tooltip("Отметка времени: «ЧЧ:ММ» — первая ночь, «ЧЧ:ММ:НН» — ночь НН. " +
+                 "Включает, когда часы дошли до неё или прошли дальше.")]
         [SerializeField] private string at = "01:00";
 
         [Tooltip("Объекты, которые включаются. В сцене их нужно оставить выключенными.")]
@@ -27,7 +31,7 @@ namespace Radio.World
         // Start, а не Awake: сессия заводится в своём Awake, и порядок между ними не гарантирован.
         private void Start()
         {
-            if (!TryParse(at, out _mark))
+            if (!new GameTimeMark(at).TryGetTotalMinutes(out _mark))
             {
                 Debug.LogError($"{nameof(ActivateAtTime)}: время «{at}» не в формате ЧЧ:ММ.", this);
                 enabled = false;
@@ -48,8 +52,13 @@ namespace Radio.World
 
             time.TimeAdvanced += OnTimeAdvanced;
 
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.Restored += Check;
+            }
+
             // Смена могла начаться уже после отметки — например, с отладочным временем.
-            OnTimeAdvanced(0, time.Minutes);
+            Check();
         }
 
         private void OnDestroy()
@@ -58,11 +67,18 @@ namespace Radio.World
             {
                 time.TimeAdvanced -= OnTimeAdvanced;
             }
+
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.Restored -= Check;
+            }
         }
 
-        private void OnTimeAdvanced(int from, int to)
+        private void OnTimeAdvanced(int from, int to) => Check();
+
+        private void Check()
         {
-            if (_done || to < _mark)
+            if (_done || time.TotalMinutes < _mark)
             {
                 return;
             }
@@ -76,22 +92,6 @@ namespace Radio.World
                     target.SetActive(true);
                 }
             }
-        }
-
-        private static bool TryParse(string clock, out int minutes)
-        {
-            minutes = 0;
-            var parts = clock.Split(':');
-
-            if (parts.Length != 2
-                || !int.TryParse(parts[0], out var hour)
-                || !int.TryParse(parts[1], out var minute))
-            {
-                return false;
-            }
-
-            minutes = hour * 60 + minute;
-            return true;
         }
     }
 }

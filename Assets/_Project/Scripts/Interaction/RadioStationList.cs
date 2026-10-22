@@ -103,6 +103,16 @@ namespace Radio.Interaction
 
             var result = new List<Station>();
 
+            // Станции, чьи звуки лежат вне папки станций (например, морзянка из Sounds),
+            // вписаны руками — сборка из папок их не знает и не должна стирать.
+            foreach (var station in Stations)
+            {
+                if (IsOutsideFolder(station))
+                {
+                    result.Add(station);
+                }
+            }
+
             foreach (var sub in UnityEditor.AssetDatabase.GetSubFolders(folder))
             {
                 var title = System.IO.Path.GetFileName(sub);
@@ -142,6 +152,26 @@ namespace Radio.Interaction
         }
 
         /// <summary>«Европа Плюс — 106,2» → имя и частота. Дробь — хоть запятой, хоть точкой.</summary>
+        private bool IsOutsideFolder(Station station)
+        {
+            if (station.clips == null || station.clips.Length == 0)
+            {
+                return false;
+            }
+
+            var prefix = folder.TrimEnd('/') + "/";
+
+            foreach (var clip in station.clips)
+            {
+                if (clip == null || UnityEditor.AssetDatabase.GetAssetPath(clip).StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private static bool TryParseTitle(string title, out string stationName, out float frequency)
         {
             stationName = title;

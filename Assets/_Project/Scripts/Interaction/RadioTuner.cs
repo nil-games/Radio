@@ -1,4 +1,5 @@
 using System;
+using Radio.World;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -154,12 +155,41 @@ namespace Radio.Interaction
             _tuning = false;
         }
 
+        /// <summary>Флаг мира: частота радио (сохранение, GDD 02.12).</summary>
+        public const string FrequencyFlag = "OBJ_RADIO_FREQ";
+
+        private void Start()
+        {
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.Restored += OnRestored;
+            }
+        }
+
         private void OnDestroy()
         {
             if (receiver != null && dial != null)
             {
                 receiver.PowerChanged -= dial.SetPower;
             }
+
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.Restored -= OnRestored;
+            }
+        }
+
+        private void OnRestored()
+        {
+            if (!GameSession.Current.World.TryGet<float>(FrequencyFlag, out var frequency))
+            {
+                return;
+            }
+
+            _frequency = Mathf.Clamp(frequency, minFrequency, maxFrequency);
+            ApplyKnob();
+            dial.SetFrequency(Frequency);
+            FrequencyChanged?.Invoke(Frequency);
         }
 
         private void Update()
@@ -219,6 +249,12 @@ namespace Radio.Interaction
             }
 
             dial.SetFrequency(Frequency);
+
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.World.Set(FrequencyFlag, Frequency);
+            }
+
             FrequencyChanged?.Invoke(Frequency);
         }
 

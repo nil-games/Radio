@@ -64,6 +64,7 @@ namespace Radio.Dialogue
 
         private PanelLayout[] _original;
         private RawImage _image;
+        private Vector2 _placement;
         private AspectRatioFitter _fitter;
         private VideoPlayer _player;
         private RenderTexture _texture;
@@ -203,6 +204,32 @@ namespace Radio.Dialogue
             _image.texture = _texture;
         }
 
+        /// <summary>
+        /// Сдвинуть собеседника относительно обычного места, в долях экрана: x вправо, y вверх.
+        /// Нужно планам камеры — в тесной ванной человек по центру кадра висел бы в воздухе.
+        /// Низ может уйти за край экрана: обрезанные ноги лучше, чем парящий над полом человек.
+        /// </summary>
+        public void SetPlacement(Vector2 offset)
+        {
+            _placement = offset;
+            ApplyPlacement();
+        }
+
+        /// <summary>Вернуть собеседника на обычное место.</summary>
+        public void ResetPlacement() => SetPlacement(Vector2.zero);
+
+        private void ApplyPlacement()
+        {
+            if (_image == null)
+            {
+                return;
+            }
+
+            var rect = _image.rectTransform;
+            rect.anchorMin = new Vector2(0.5f + _placement.x, verticalSpan.x + _placement.y);
+            rect.anchorMax = new Vector2(0.5f + _placement.x, verticalSpan.y + _placement.y);
+        }
+
         private void BuildImage()
         {
             var go = new GameObject("Portrait", typeof(RectTransform));
@@ -217,6 +244,9 @@ namespace Radio.Dialogue
             _image = go.AddComponent<RawImage>();
             _image.raycastTarget = false;
             _image.enabled = false;
+
+            // Сдвиг плана мог прийти раньше, чем появилась картинка.
+            ApplyPlacement();
 
             // Ширину считает сам Unity по высоте и пропорциям клипа: персонаж не растягивается
             // ни на широком мониторе, ни в окне редактора.

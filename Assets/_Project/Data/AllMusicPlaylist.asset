@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3b4c04570b0ae24eb7df85934d34e40, type: 3}
+  m_Name: AllMusicPlaylist
+  m_EditorClassIdentifier: Assembly-CSharp::Radio.Audio.MusicPlaylist
+  folder: Assets/_Project/Audio/Music
+  tracks:
+  - {fileID: 8300000, guid: cfb84ffa803b0214bbab589807f8b4db, type: 3}
+  - {fileID: 8300000, guid: 56cd44b042c7e2b4188a42732024408c, type: 3}
+  - {fileID: 8300000, guid: c496b08b5f62f144c875d42087799b49, type: 3}
+  - {fileID: 8300000, guid: e648b1b7f60a403418e9ab7b9037aca8, type: 3}
+  - {fileID: 8300000, guid: 4f09a46f644c1b848b98eb8aeedfd4d0, type: 3}
+  - {fileID: 8300000, guid: d986adf7695a3cd47a40fb8cf1ea236c, type: 3}
+  - {fileID: 8300000, guid: 4b13d226bfdb78544ad7ef901c36e9ee, type: 3}
+  - {fileID: 8300000, guid: cabc27b8d74700542b510a032f6ab5aa, type: 3}
+  - {fileID: 8300000, guid: 166d0e13e341f0049a5751bd8f33e0c2, type: 3}
+  - {fileID: 8300000, guid: 3b646b00dc21c684da152b47e6c3c93c, type: 3}
+  - {fileID: 8300000, guid: 4e355a4ef66ebaf478584fc0a7c56c22, type: 3}
+  - {fileID: 8300000, guid: 57031b5c1076b8342b125d11faf477f7, type: 3}
+  - {fileID: 8300000, guid: 3ac40ae82e6d98c41835ee7a279a3deb, type: 3}

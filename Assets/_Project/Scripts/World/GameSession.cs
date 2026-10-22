@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Radio.World
@@ -26,6 +27,21 @@ namespace Radio.World
 
         public WorldState World => _world;
 
+        /// <summary>
+        /// Сцена восстановлена из снимка (загрузка сохранения, возврат из мини-локации):
+        /// часы, флаги и задачи уже на месте. Объекты читают свои флаги <c>OBJ_*</c>.
+        /// </summary>
+        public event Action Restored;
+
+        /// <summary>Сцена сейчас восстановлена из снимка, а не начата с нуля.</summary>
+        public bool WasRestored { get; private set; }
+
+        internal void NotifyRestored()
+        {
+            WasRestored = true;
+            Restored?.Invoke();
+        }
+
         private void Awake()
         {
             if (Current != null && Current != this)
@@ -36,6 +52,9 @@ namespace Radio.World
             }
 
             Current = this;
+
+            // Новая сцена: события по часам прошлой сцены выгружены вместе с ней.
+            TimedEvent.ForgetAll();
             _time = GetComponent<TimeManager>();
             _world = GetComponent<WorldState>();
         }

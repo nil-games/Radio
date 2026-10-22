@@ -4,7 +4,8 @@ using UnityEngine;
 namespace Radio.UI
 {
     /// <summary>
-    /// Показывает случайную фразу в ответ на кнопку «Не нажимать!» и плавно её гасит.
+    /// Показывает фразу рядом с кнопками меню и плавно её гасит: случайную — на
+    /// «Не нажимать!», заданную — на кнопки, которые пока ничего не делают.
     /// </summary>
     public sealed class MenuPhrasePlayer : MonoBehaviour
     {
@@ -71,7 +72,39 @@ namespace Radio.UI
                 return;
             }
 
-            phraseLabel.text = PickPhrase();
+            Show(PickPhrase());
+        }
+
+        /// <summary>Показать конкретную фразу тем же появлением и угасанием.</summary>
+        public void Play(string text)
+        {
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                Show(text);
+            }
+        }
+
+        /// <summary>
+        /// Поставить фразу напротив кнопки, на которую она отвечает. Кнопка и фраза
+        /// должны лежать в одном родителе: сдвигается только высота.
+        /// </summary>
+        public void AlignTo(RectTransform button)
+        {
+            if (button == null || button.parent != phraseLabel.rectTransform.parent)
+            {
+                return;
+            }
+
+            var center = button.anchoredPosition.y + (0.5f - button.pivot.y) * button.rect.height;
+            var label = phraseLabel.rectTransform;
+            label.anchoredPosition = new Vector2(
+                label.anchoredPosition.x,
+                center - (0.5f - label.pivot.y) * label.rect.height);
+        }
+
+        private void Show(string text)
+        {
+            phraseLabel.text = text;
             _elapsed = 0f;
             _playing = true;
         }

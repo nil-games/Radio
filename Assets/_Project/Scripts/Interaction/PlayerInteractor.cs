@@ -102,7 +102,12 @@ namespace Radio.Interaction
 
             ActiveCamera = playerCamera;
             _actions = new InputSystem_Actions();
+
+            // События «когда игрок встал из-за стола» спрашивают об этом здесь.
+            Radio.World.TimedEvent.PlayerBusy = IsPlayerBusy;
         }
+
+        private bool IsPlayerBusy() => this != null && movement != null && movement.IsSuspended;
 
         private void OnEnable() => _actions?.Player.Enable();
 
@@ -114,7 +119,15 @@ namespace Radio.Interaction
             SetFocus(null);
         }
 
-        private void OnDestroy() => _actions?.Dispose();
+        private void OnDestroy()
+        {
+            _actions?.Dispose();
+
+            if (Radio.World.TimedEvent.PlayerBusy == (System.Func<bool>)IsPlayerBusy)
+            {
+                Radio.World.TimedEvent.PlayerBusy = null;
+            }
+        }
 
         private void Update()
         {

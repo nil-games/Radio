@@ -13,17 +13,20 @@ namespace Radio.Interaction
     /// и без задержки телефон зазвонил бы в первый же кадр.
     /// Отладочный перевод часов дальше отметки отменяет звонок и глушит его, если он уже идёт.
     /// Кто окажется в трубке, решает Phone.yarn, а не этот компонент.
+    /// Кроме звонков по часам, диалог может попросить перезвонить: <c>&lt;&lt;ring_phone 60&gt;&gt;</c>
+    /// — телефон зазвонит через 60 реальных секунд. Это ответ на выбор игрока
+    /// (перезвон Тамарочки), а не событие ночи, поэтому оно не привязано к часам.
     /// </remarks>
     [RequireComponent(typeof(AudioSource))]
-    public sealed class PhoneRinger : MonoBehaviour
+    public sealed class PhoneRinger : MonoBehaviour, ISaveBlocker
     {
         [Header("Звук")]
         [Tooltip("Звонок телефона. Зацикливается сам, отдельная галочка не нужна.")]
         [SerializeField] private AudioClip ringClip;
 
         [Header("Когда звонить")]
-        [Tooltip("Ночи, в которые телефон звонит при входе в квартиру.")]
-        [SerializeField] private int[] ringsOnNights = { 1 };
+        [Tooltip("Устарело: ночь теперь записана в самой отметке («ЧЧ:ММ:НН»). Не используется.")]
+        [SerializeField, HideInInspector] private int[] ringsOnNights = { 1 };
 
         [Tooltip("Когда звонит: отметки на часах смены и задержка в реальных секундах после каждой.")]
         [SerializeField] private GameTimeMark[] rings = { new GameTimeMark("00:00", 2f) };
@@ -31,13 +34,16 @@ namespace Radio.Interaction
         private AudioSource _source;
         private TimeManager _time;
         private TimedEvent[] _rings = Array.Empty<TimedEvent>();
-        private bool _armed;
+        private float _callbackAt = -1f;
 
         // Какая отметка звенит сейчас. Минус один — звонок включили не по часам.
         private int _ringingIndex = -1;
 
         /// <summary>Телефон звонит прямо сейчас. Пока нет — снимать трубку не с чего.</summary>
         public bool IsRinging { get; private set; }
+
+        /// <summary>Звонит или ждёт обещанного перезвона — сохраниться посреди нельзя.</summary>
+        public bool BlocksSave => IsRinging || _callbackAt >= 0f;
 
         /// <summary>Трубку сняли или звонок оборвался.</summary>
         public event Action RingingStopped;
@@ -59,14 +65,21 @@ namespace Radio.Interaction
         // порядок между объектами Unity не гарантирует.
         private void Start()
         {
+            // Ночь не проверяем: она записана в отметке звонка, а смена ночи идёт без
+            // перезагрузки сцены — проверка при старте отрезала бы звонки следующей ночи.
             _time = GameSession.Current != null ? GameSession.Current.Time : null;
-            var night = _time != null ? _time.Night : 1;
-            _armed = Array.IndexOf(ringsOnNights, night) >= 0;
+
+            var runner = FindAnyObjectByType<Yarn.Unity.DialogueRunner>();
+
+            if (runner != null)
+            {
+                runner.AddCommandHandler("ring_phone", (Action<float>)RingIn);
+            }
             _rings = new TimedEvent[rings.Length];
 
             for (var i = 0; i < rings.Length; i++)
             {
-                _rings[i] = new TimedEvent(rings[i]);
+                _rings[i] = new TimedEvent(rings[i], TimedEvent.KeyFor(this, i));
 
                 if (!_rings[i].IsValid)
                 {
@@ -90,7 +103,13 @@ namespace Radio.Interaction
 
         private void Update()
         {
-            if (!_armed || _time == null)
+            if (_callbackAt >= 0f && Time.time >= _callbackAt && !IsRinging)
+            {
+                _callbackAt = -1f;
+                StartRinging();
+            }
+
+            if (_time == null)
             {
                 return;
             }
@@ -107,8 +126,13 @@ namespace Radio.Interaction
             }
         }
 
+        /// <summary>Перезвонить через <paramref name="seconds"/> реальных секунд.</summary>
+        public void RingIn(float seconds) => _callbackAt = Time.time + Mathf.Max(0f, seconds);
+
         private void OnDebugJumped(int minutes)
         {
+            // Обещанный перезвон относится к прошлому времени — отменяем.
+            _callbackAt = -1f;
             var stop = false;
 
             for (var i = 0; i < _rings.Length; i++)

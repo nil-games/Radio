@@ -12,6 +12,8 @@ namespace Radio.Interaction
     /// <remarks>
     /// Срабатывает один раз. Команда диалога <c>&lt;&lt;radio_off&gt;&gt;</c> выключает радио —
     /// для ветки «выключить радио».
+    /// Когда задача появляется, радио само включается и шипит на той частоте, где стоит:
+    /// «Шум радио» в сценарии — это и есть приглашение подойти и поискать голос.
     /// </remarks>
     public sealed class RadioVoiceTrigger : MonoBehaviour
     {
@@ -32,8 +34,12 @@ namespace Radio.Interaction
 
         [SerializeField] private DialogueController dialogue;
 
+        [Tooltip("Включить радио само, как только появилась задача.")]
+        [SerializeField] private bool powerOnWithTask = true;
+
         private TaskLog _tasks;
         private bool _done;
+        private bool _poweredOn;
 
         private void Awake()
         {
@@ -57,7 +63,23 @@ namespace Radio.Interaction
 
         private void Update()
         {
-            if (_done || tuner == null || receiver == null || !receiver.IsOn)
+            if (_done || tuner == null || receiver == null)
+            {
+                return;
+            }
+
+            if (_tasks == null)
+            {
+                _tasks = FindAnyObjectByType<TaskLog>();
+            }
+
+            if (powerOnWithTask && !_poweredOn && _tasks != null && _tasks.IsActive(requiredTask))
+            {
+                _poweredOn = true;
+                receiver.SetPower(true);
+            }
+
+            if (!receiver.IsOn)
             {
                 return;
             }

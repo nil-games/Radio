@@ -78,6 +78,9 @@ namespace Radio.UI
         private readonly StringBuilder _timeInput = new StringBuilder(4);
         private float _timeInputAt;
 
+        // Нажата B: следующая цифра — номер эфира для отладочного запуска.
+        private bool _awaitBroadcast;
+
         private void Awake()
         {
             if (font == null)
@@ -213,10 +216,35 @@ namespace Radio.UI
                 RefreshDebug();
             }
 
+            // B, затем цифра — сразу эфир с этим номером текущей ночи (сложность эфира
+            // берётся по ночи и номеру, так что ночь выбирают обычным вводом времени).
+            if (keyboard.bKey.wasPressedThisFrame)
+            {
+                _awaitBroadcast = !_awaitBroadcast;
+                _timeInput.Clear();
+                RefreshDebug();
+                return;
+            }
+
             var digit = PressedDigit(keyboard);
 
             if (digit < 0)
             {
+                return;
+            }
+
+            if (_awaitBroadcast)
+            {
+                _awaitBroadcast = false;
+                var host = FindAnyObjectByType<Radio.Minigames.MinigameHost>(FindObjectsInactive.Include);
+
+                if (host != null && digit > 0)
+                {
+                    _debugLabel.gameObject.SetActive(false);
+                    host.DebugStartBroadcast(digit);
+                }
+
+                RefreshDebug();
                 return;
             }
 
@@ -347,6 +375,9 @@ namespace Radio.UI
                 _debugText.Append("<alpha=#88>Ввести время: ").Append(typed, 0, 2).Append(':').Append(typed, 2, 2)
                           .Append(':').Append(typed, 4, 2)
                           .Append(" (6 цифр — с ночью, 4 — в текущей ночи)<alpha=#FF>\n");
+                _debugText.Append(_awaitBroadcast
+                    ? "<color=#F2A82E>Эфир: нажми номер эфира этой ночи (1–4)</color>\n"
+                    : "<alpha=#88>B, затем цифра — сразу эфир с этим номером этой ночи<alpha=#FF>\n");
             }
 
             _debugLabel.text = _debugText.ToString();

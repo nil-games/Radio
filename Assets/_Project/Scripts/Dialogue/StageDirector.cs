@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Radio.World;
 using UnityEngine;
 using Yarn.Unity;
 
@@ -76,11 +77,41 @@ namespace Radio.Dialogue
             runner.AddCommandHandler("toggle", (Action<string>)Toggle);
         }
 
+        // Показанное и спрятанное диалогом помнит флаг OBJ_STAGE_<имя> (сохранение, GDD 02.12).
+        private const string FlagPrefix = "OBJ_STAGE_";
+
+        private void Start()
+        {
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.Restored += OnRestored;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.Restored -= OnRestored;
+            }
+        }
+
+        private void OnRestored()
+        {
+            foreach (var pair in _byId)
+            {
+                if (GameSession.Current.World.TryGet<bool>(FlagPrefix + pair.Key.ToUpperInvariant(), out var visible))
+                {
+                    pair.Value.SetActive(visible);
+                }
+            }
+        }
+
         private void SetVisible(string id, bool visible)
         {
             if (TryGet(id, out var target))
             {
-                target.SetActive(visible);
+                Apply(id, target, visible);
             }
         }
 
@@ -88,7 +119,17 @@ namespace Radio.Dialogue
         {
             if (TryGet(id, out var target))
             {
-                target.SetActive(!target.activeSelf);
+                Apply(id, target, !target.activeSelf);
+            }
+        }
+
+        private static void Apply(string id, GameObject target, bool visible)
+        {
+            target.SetActive(visible);
+
+            if (GameSession.Current != null)
+            {
+                GameSession.Current.World.Set(FlagPrefix + id.ToUpperInvariant(), visible);
             }
         }
 

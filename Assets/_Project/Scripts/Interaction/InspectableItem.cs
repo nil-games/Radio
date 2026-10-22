@@ -1,3 +1,4 @@
+using Radio.Dialogue;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -20,6 +21,10 @@ namespace Radio.Interaction
     /// Как добавить новый предмет: Add Component → Радио → 3D просмотр, плюс коллайдер
     /// (без него на предмет не навестись) и, по желанию, OutlineHighlighter для обводки.
     /// Поворот в руках (Hold Euler) подбирается под модель, чтобы она ложилась лицевой стороной.
+    /// <para/>
+    /// Можно задать узел диалога «перед просмотром»: сначала звучит он, и только когда
+    /// разговор закончился, предмет подлетает к камере. Одновременно их не показываем:
+    /// клавиша, листающая реплики, тут же положила бы предмет обратно.
     /// </remarks>
     [AddComponentMenu("Радио/3D просмотр")]
     public sealed class InspectableItem : Interactable
@@ -56,6 +61,13 @@ namespace Radio.Interaction
 
         [SerializeField] private int sortingOrder = 60;
 
+        [Header("Реплика перед просмотром")]
+        [Tooltip("Узел .yarn, который звучит перед тем, как предмет поднесут к камере. Пусто — без реплики.")]
+        [SerializeField] private string openingNode;
+
+        [Tooltip("Если пусто, ищется в сцене.")]
+        [SerializeField] private DialogueController dialogue;
+
         private PlayerInteractor _interactor;
         private Transform _parent;
         private Vector3 _homePosition;
@@ -81,6 +93,9 @@ namespace Radio.Interaction
 
         public override bool CanInteract => base.CanInteract && _state == State.Resting;
 
+        /// <summary>Предмет у камеры и его рассматривают. Нужно предметам со своим управлением, как у замка.</summary>
+        public bool IsHeld => _state == State.Held;
+
         public override void Interact(PlayerInteractor interactor)
         {
             if (_state != State.Resting)
@@ -88,6 +103,37 @@ namespace Radio.Interaction
                 return;
             }
 
+            if (!string.IsNullOrWhiteSpace(openingNode))
+            {
+                if (dialogue == null)
+                {
+                    dialogue = FindAnyObjectByType<DialogueController>();
+                }
+
+                if (dialogue != null)
+                {
+                    _interactor = interactor;
+                    dialogue.DialogueFinished += OnOpeningFinished;
+                    dialogue.StartDialogue(openingNode);
+                    return;
+                }
+            }
+
+            BeginInspect(interactor);
+        }
+
+        private void OnOpeningFinished()
+        {
+            dialogue.DialogueFinished -= OnOpeningFinished;
+
+            if (_interactor != null)
+            {
+                BeginInspect(_interactor);
+            }
+        }
+
+        private void BeginInspect(PlayerInteractor interactor)
+        {
             _interactor = interactor;
             _startedFrame = Time.frameCount;
 

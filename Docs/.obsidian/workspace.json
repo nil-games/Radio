@@ -1,0 +1,232 @@
+{
+  "main": {
+    "id": "9e10f07051be1448",
+    "type": "split",
+    "children": [
+      {
+        "id": "b1beab7e388afbea",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a24a3c21c1176e32",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Диалоги/Ночь_1/N1-01_Звонок_Викторыча.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "N1-01_Звонок_Викторыча"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "e73265430d1189a7",
+    "type": "split",
+    "children": [
+      {
+        "id": "041c7fb1e20760ad",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f3efafbaa7bc4682",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Файловый менеджер"
+            }
+          },
+          {
+            "id": "00505ce641e89f7f",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Поиск"
+            }
+          },
+          {
+            "id": "24082b2af3cbaa8c",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Закладки"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "91f616ab6c3a03a7",
+    "type": "split",
+    "children": [
+      {
+        "id": "ab6b4dbebed977df",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "be653bdb36d8afc6",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "GDD.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Обратные ссылки"
+            }
+          },
+          {
+            "id": "4ffcd4f121b74afe",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "GDD.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Исходящие ссылки"
+            }
+          },
+          {
+            "id": "a4139d6fa43ad9ef",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Теги"
+            }
+          },
+          {
+            "id": "db9ac4038fa9a151",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Все свойства"
+            }
+          },
+          {
+            "id": "11e875652b4d38d8",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "GDD.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Структура"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Меню быстрого перехода": false,
+      "graph:Граф": false,
+      "canvas:Создать новый холст": false,
+      "daily-notes:Сегодняшняя заметка": false,
+      "templates:Вставить шаблон": false,
+      "command-palette:Открыть палитру команд": false,
+      "bases:Создать новую базу": false
+    }
+  },
+  "active": "a24a3c21c1176e32",
+  "lastOpenFiles": [
+    "Диалоги/Ночь_1/N1-02_Первый_эфир.md",
+    "Диалоги/Ночь_1/N1-06_Соседка_снизу.md",
+    "Диалоги/Ночь_1/N1-05_Бабка_Зина.md",
+    "Диалоги/Ночь_1/N1-01_Звонок_Викторыча.md",
+    "Персонажи.md",
+    "Скелет_ночей.md",
+    "GDD.md",
+    "Диалоги/Ночь_1/N1-01_Звонок_Викторыча.md.tmp.36984.dc8d68adb831",
+    "Диалоги/Ночь_1/README.md.tmp.36984.7c67a2baaa55",
+    "Инструкция_по_заполнению_Broadcast.md.tmp.36984.2a3e1f2454d4",
+    "Инструкция_по_заполнению_Broadcast.md.tmp.36984.d94b190ff8d8",
+    "Index.md",
+    "Index.md.tmp.36984.9989ede23384",
+    "Диалоги/Ночь_1/N1-11_Утро.md",
+    "Диалоги/Ночь_1/N1-10_Сон_Изнанка.md",
+    "Диалоги/Ночь_1/N1-08_Кошка.md",
+    "Диалоги/Ночь_1/N1-07_Объявление_Зины.md",
+    "Диалоги/Ночь_1/N1-05_Бабка_Зина.md.tmp.39784.8246923d50a0",
+    "Диалоги/Ночь_1/N1-04_Коридор.md",
+    "Диалоги/Ночь_1/N1-03_Звонок_Саши.md",
+    "Диалоги/Ночь_1/README.md",
+    "Диалоги/Ночь_1",
+    "Диалоги",
+    "Characters.md",
+    "Архив_демо/Расписание_oldversion.xlsx",
+    "Расписание.xlsx",
+    "Архив_демо/Сценарии/030012Финал_на_точке.md",
+    "Архив_демо/Сценарии/030011Выход_из_квартиры.md",
+    "Архив_демо/Сценарии/030010Стук_в_дверь.md",
+    "Архив_демо/Сценарии/030009Бабка_Зина.md",
+    "Архив_демо/Сценарии/030008Поймать_волну.md",
+    "Архив_демо/Сценарии/030007Звонок_Петра_Ильича.md",
+    "Архив_демо/Сценарии/030006Сантехник.md",
+    "Архив_демо/Сценарии/030005Эфир_объявления.md",
+    "Архив_демо/Сценарии/030004Звонок_Лидии_Павловны.md",
+    "Архив_демо/Сценарии/030003Визит_полиции.md",
+    "BroadcastUI_Sketch.png",
+    "GDD_StudioReference.png"
+  ]
+}

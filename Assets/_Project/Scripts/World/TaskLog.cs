@@ -144,6 +144,40 @@ namespace Radio.World
         }
 
         /// <summary>
+        /// Загрузка снимка (GDD 02.12): список задач из сохранения. Флаги мира к этому
+        /// моменту уже восстановлены — сделанные задачи берутся из них (<c>TASK_x = false</c>),
+        /// активные идут в сохранённом порядке. Стартовые задачи сцены отбрасываются.
+        /// </summary>
+        public void Restore(IEnumerable<string> active, WorldState world)
+        {
+            if (!enabled)
+            {
+                return;
+            }
+
+            _active.Clear();
+            _done.Clear();
+
+            foreach (var pair in world.Bools)
+            {
+                if (!pair.Value && pair.Key.StartsWith(FlagPrefix, StringComparison.Ordinal))
+                {
+                    _done.Add(pair.Key.Substring(FlagPrefix.Length));
+                }
+            }
+
+            foreach (var id in active)
+            {
+                if (catalog.TryGetText(id, out var text) && !_done.Contains(id) && !IsActive(id))
+                {
+                    _active.Add(new Entry(id, text));
+                }
+            }
+
+            Changed?.Invoke();
+        }
+
+        /// <summary>
         /// Только для отладки: снять все задачи, которые относятся ко времени раньше отметки,
         /// и не давать им появиться позже. Нужно, чтобы после перевода часов в списке
         /// остались только задачи нового времени. Зовётся по TimeManager.DebugJumped.

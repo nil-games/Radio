@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Radio.Audio
@@ -20,6 +21,12 @@ namespace Radio.Audio
 
         private AudioClip _current;
         private bool _playing;
+
+        /// <summary>Трек, который играет сейчас. Пусто, пока ничего не играет.</summary>
+        public AudioClip Current => _playing ? _current : null;
+
+        /// <summary>Начался новый трек — сам по окончании прошлого или по Skip.</summary>
+        public event Action<AudioClip> TrackStarted;
 
         private void Awake()
         {
@@ -56,6 +63,15 @@ namespace Radio.Audio
             }
         }
 
+        /// <summary>Сразу переключить на другой случайный трек, не дожидаясь конца текущего.</summary>
+        public void Skip()
+        {
+            if (isActiveAndEnabled)
+            {
+                PlayNext();
+            }
+        }
+
         private void PlayNext()
         {
             _current = playlist != null ? playlist.PickRandom(_current) : null;
@@ -70,6 +86,7 @@ namespace Radio.Audio
             source.clip = _current;
             source.Play();
             _playing = true;
+            TrackStarted?.Invoke(_current);
         }
     }
 }

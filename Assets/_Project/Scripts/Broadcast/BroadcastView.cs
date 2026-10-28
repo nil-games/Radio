@@ -85,6 +85,8 @@ namespace Radio.Broadcast
         private Radio.Dialogue.DialogueController _dialogue;
         private InboxItem _storyItem;
         private bool _storySkip;
+        private bool _eventRunning;
+        private bool _storyQuick;
         private float _statusFlashUntil;
 
         private sealed class CassetteCard
@@ -119,7 +121,7 @@ namespace Radio.Broadcast
 
         private bool AnyWindowOpen =>
             (_itemWindow != null && _itemWindow.activeSelf) || (_result != null && _result.IsOpen)
-            || (_summary != null && _summary.activeSelf) || _storyItem != null;
+            || (_summary != null && _summary.activeSelf) || _storyItem != null || _eventRunning;
 
         private void Awake()
         {
@@ -131,6 +133,7 @@ namespace Radio.Broadcast
             }
 
             _game.Changed += Refresh;
+            _game.StoryEventFired += StartStoryEvent;
         }
 
         private void Start()
@@ -142,6 +145,9 @@ namespace Radio.Broadcast
             {
                 // «Не ставить»: элемент остаётся во входящих и сгорит по своему таймеру.
                 runner.AddCommandHandler("broadcast_skip", (System.Action)(() => _storySkip = true));
+
+                // «Коротко»: элемент уезжает по ленте быстро — отменённый концерт не держит заявки.
+                runner.AddCommandHandler("broadcast_quick", (System.Action)(() => _storyQuick = true));
             }
         }
 
@@ -150,6 +156,7 @@ namespace Radio.Broadcast
             if (_game != null)
             {
                 _game.Changed -= Refresh;
+                _game.StoryEventFired -= StartStoryEvent;
             }
         }
 
@@ -303,7 +310,7 @@ namespace Radio.Broadcast
                 }
             }
 
-            var visible = active && _storyItem == null;
+            var visible = active && _storyItem == null && !_eventRunning;
 
             if (_screen.gameObject.activeSelf != visible)
             {
@@ -640,7 +647,7 @@ namespace Radio.Broadcast
 
             var kindText = isAd ? "Реклама"
                 : !isStory ? "Заявка"
-                : item.Story.Kind == StoryElementKind.Call ? "Звонок в эфир" : "Объявление";
+                : KindLabel(item.Story.Kind, true);
             var kind = BroadcastUi.Label(rect, "Kind", kindText, 20f,
                 isAd ? BroadcastUi.AdBlue : isStory ? BroadcastUi.Amber : BroadcastUi.Muted);
             BroadcastUi.Place(kind.rectTransform, 92f, 12f, InboxWidth - 100f, 30f);
@@ -707,7 +714,7 @@ namespace Radio.Broadcast
             else if (item.Source.Kind == InboxKind.Story)
             {
                 var story = item.Source.Story;
-                var kind = story.Kind == StoryElementKind.Call ? "Звонок" : "Объявление";
+                var kind = KindLabel(story.Kind, false);
                 text = $"<color=#F2A82E>{kind}</color>\n{story.Title}";
             }
             else
@@ -912,9 +919,47 @@ namespace Radio.Broadcast
 
             _storyItem = item;
             _storySkip = false;
+            _storyQuick = false;
             _game.Paused = true;
             _dialogue.DialogueFinished += OnStoryFinished;
             _dialogue.StartDialogue(item.Story.Node);
+        }
+
+        private static string KindLabel(StoryElementKind kind, bool full) => kind switch
+        {
+            StoryElementKind.Call => full ? "Звонок в эфир" : "Звонок",
+            StoryElementKind.Concert => "Концерт",
+            StoryElementKind.Event => "Событие",
+            _ => "Объявление",
+        };
+
+        /// <summary>
+        /// Событие посреди эфира (налёт): разговор начинается сам, экран эфира прячется,
+        /// эфир на паузе — как при сюжетном элементе, только без входящих и ленты.
+        /// </summary>
+        private void StartStoryEvent(StoryElement element)
+        {
+            if (_dialogue == null)
+            {
+                _dialogue = FindAnyObjectByType<Radio.Dialogue.DialogueController>();
+            }
+
+            if (_dialogue == null || _dialogue.IsRunning)
+            {
+                return;
+            }
+
+            _eventRunning = true;
+            _game.Paused = true;
+            _dialogue.DialogueFinished += OnStoryEventFinished;
+            _dialogue.StartDialogue(element.Node);
+        }
+
+        private void OnStoryEventFinished()
+        {
+            _dialogue.DialogueFinished -= OnStoryEventFinished;
+            _eventRunning = false;
+            Refresh();
         }
 
         private void OnStoryFinished()
@@ -925,7 +970,7 @@ namespace Radio.Broadcast
 
             if (!_storySkip)
             {
-                _game.PlaceStory(item);
+                _game.PlaceStory(item, _storyQuick);
             }
 
             Refresh();

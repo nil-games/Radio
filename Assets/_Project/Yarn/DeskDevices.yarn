@@ -73,6 +73,18 @@ title: Mixer_StartBroadcast
     <<jump Night1_BroadcastIntro2>>
 <<elseif $night == 1>>
     <<jump Night1_BroadcastIntro3>>
+<<elseif $night == 2 and not $STORY_N2_BROADCAST1_STARTED>>
+    <<jump Night2_BroadcastIntro1>>
+<<elseif $night == 2 and not $STORY_N2_BROADCAST2_STARTED>>
+    <<jump Night2_BroadcastIntro2>>
+<<elseif $night == 2>>
+    <<jump Night2_BroadcastIntro3>>
+<<elseif $night == 3 and not $STORY_N3_BROADCAST1_STARTED>>
+    <<jump Night3_BroadcastIntro1>>
+<<elseif $night == 3 and not $STORY_N3_BROADCAST2_STARTED>>
+    <<jump Night3_BroadcastIntro2>>
+<<elseif $night == 3>>
+    <<jump Night3_BroadcastIntro3>>
 <<else>>
     // Ночи без своего вступления (пока все, кроме первой).
     <<on_air on>>

@@ -61,3 +61,90 @@ MonoBehaviour:
     at: 00:00
     doneFlags:
     - STORY_N2_BOSS_CALL_DONE
+  - id: n2_broadcast_1
+    night: 2
+    at: 00:30
+    doneFlags:
+    - STORY_N2_BROADCAST1_STARTED
+  - id: n2_zina
+    night: 2
+    at: 01:30
+    doneFlags:
+    - STORY_N2_ZINA_DONE
+  - id: n2_broadcast_2
+    night: 2
+    at: 02:00
+    doneFlags:
+    - STORY_N2_BROADCAST2_STARTED
+  - id: n2_kolya
+    night: 2
+    at: 05:00
+    doneFlags:
+    - STORY_N2_KOLYA_DONE
+    - STORY_FOUND_SERGEY_STASH
+    - STORY_MAP_TOWER_CROSSED
+  - id: n2_duty
+    night: 2
+    at: 05:30
+    doneFlags:
+    - STORY_N2_DUTY_CALL_DONE
+  - id: n2_broadcast_3
+    night: 2
+    at: 04:00
+    doneFlags:
+    - STORY_N2_BROADCAST3_STARTED
+  - id: n2_sever
+    night: 2
+    at: 03:30
+    doneFlags:
+    - STORY_N2_SEVER_CALL_DONE
+    - KNOW_SEVER_WARNED_DUTY
+  - id: n2_yana
+    night: 2
+    at: 03:00
+    doneFlags:
+    - STORY_N2_YANA_DONE
+    - STORY_GARAGE_TAPE_FOUND
+  - id: n3_boss_call
+    night: 3
+    at: 00:00
+    doneFlags:
+    - STORY_N3_BOSS_CALL_DONE
+    - KNOW_CONCERT_PRESSURE
+    - STORY_N2_DONE
+  - id: n3_broadcast_1
+    night: 3
+    at: 00:30
+    doneFlags:
+    - STORY_N3_BROADCAST1_STARTED
+  - id: n3_bear
+    night: 3
+    at: 01:30
+    doneFlags:
+    - STORY_N3_BEAR_DONE
+    - KNOW_RAID_THREAT
+  - id: n3_broadcast_2
+    night: 3
+    at: 02:00
+    doneFlags:
+    - STORY_N3_BROADCAST2_STARTED
+  - id: n3_eduard
+    night: 3
+    at: 02:30
+    doneFlags:
+    - STORY_N3_CONSPIRACY_DONE
+  - id: n3_kravets
+    night: 3
+    at: 03:30
+    doneFlags:
+    - STORY_N3_KRAVETS_DONE
+  - id: n3_broadcast_3
+    night: 3
+    at: 04:00
+    doneFlags:
+    - STORY_N3_BROADCAST3_STARTED
+  - id: n3_after_concert
+    night: 3
+    at: 05:00
+    doneFlags:
+    - STORY_N3_GARAGE_DONE

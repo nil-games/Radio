@@ -42,6 +42,13 @@ namespace Radio.UI
 
             [TextArea(6, 20)]
             public string text;
+
+            [Tooltip("Вложение-картинка под текстом письма (фото Алисы, ночь 3). Пусто — без картинки.")]
+            public Texture photo;
+
+            [Tooltip("Узел Yarn с мыслями героя: начинается, когда игрок закрывает прочитанное письмо " +
+                     "(возвращается к входящим или уходит от компьютера). Один раз. Пусто — никакого.")]
+            public string readNode;
         }
 
         [Header("Письма")]
@@ -64,6 +71,8 @@ namespace Radio.UI
         [SerializeField] private TaskLog tasks;
 
         private readonly List<GameObject> _spawned = new List<GameObject>();
+        private readonly HashSet<int> _nodesPlayed = new HashSet<int>();
+        private int _openMessage = -1;
         private TextMeshProUGUI _body;
         private float _bodyFontSize;
         private bool _bodyAutoSize;
@@ -80,6 +89,7 @@ namespace Radio.UI
 
         public override void Close()
         {
+            PlayReadNode();
             Clear();
 
             // Окно общее для всех значков: вернуть тексту тот вид, в котором его взяли.
@@ -92,6 +102,7 @@ namespace Radio.UI
 
         private void ShowInbox()
         {
+            PlayReadNode();
             Clear();
             RestoreBody();
             _body.text = string.Empty;
@@ -133,8 +144,51 @@ namespace Radio.UI
                 $"<color=#{ColorUtility.ToHtmlStringRGB(accentColor)}>Время отправления:</color> {message.sentAt}\n\n" +
                 message.text;
 
+            if (message.photo != null)
+            {
+                CreatePhoto(message.photo);
+            }
+
             CreateBackButton();
             MarkRead(message);
+            _openMessage = index;
+        }
+
+        /// <summary>
+        /// Мысли героя о письме — после того, как он его закрыл: поверх открытого письма
+        /// окно разговора закрыло бы текст. Один раз за сцену; флаг «прочитано» Yarn
+        /// видит и сам, так что повторно узел не нужен.
+        /// </summary>
+        private void PlayReadNode()
+        {
+            var index = _openMessage;
+            _openMessage = -1;
+
+            if (index < 0 || string.IsNullOrWhiteSpace(messages[index].readNode) || !_nodesPlayed.Add(index))
+            {
+                return;
+            }
+
+            var dialogue = FindAnyObjectByType<Radio.Dialogue.DialogueController>();
+
+            if (dialogue != null && !dialogue.IsRunning)
+            {
+                dialogue.StartDialogue(messages[index].readNode);
+            }
+        }
+
+        private void CreatePhoto(Texture photo)
+        {
+            var rect = CreateRect("MailPhoto");
+            rect.anchorMin = new Vector2(1f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(1f, 0f);
+            var height = 240f;
+            rect.sizeDelta = new Vector2(height * photo.width / Mathf.Max(1f, photo.height), height);
+            rect.anchoredPosition = new Vector2(0f, 52f);
+            var image = rect.gameObject.AddComponent<RawImage>();
+            image.texture = photo;
+            image.raycastTarget = false;
         }
 
         private void RestoreBody()

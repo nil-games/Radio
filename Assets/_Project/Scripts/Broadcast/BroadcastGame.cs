@@ -76,6 +76,12 @@ namespace Radio.Broadcast
         public float Duration;
         public CheckResult Result;
 
+        /// <summary>
+        /// Сюжетный элемент уехал коротко (<c>&lt;&lt;broadcast_quick&gt;&gt;</c>): отменённый
+        /// концерт не держит заявки.
+        /// </summary>
+        public bool Quick;
+
         public bool IsAd => Source.Kind == InboxKind.Ad;
 
         /// <summary>Едет без проверки и сам уходит с ленты: реклама и сюжетные элементы.</summary>
@@ -233,6 +239,18 @@ namespace Radio.Broadcast
                 AddCassette(id);
             }
 
+            // Найденные по сюжету — в оставшиеся места пула, если их флаг поставлен.
+            var world = Radio.World.GameSession.Current != null ? Radio.World.GameSession.Current.World : null;
+
+            foreach (var found in settings.foundCassettes ?? System.Array.Empty<BroadcastSettings.FoundCassette>())
+            {
+                if (_cassettes.Count < pool && world != null
+                    && world.TryGet<bool>(found.flag, out var owned) && owned)
+                {
+                    AddCassette(found.id);
+                }
+            }
+
             if (settings.includeStrangeCassette)
             {
                 AddCassette(settings.strangeCassetteId);
@@ -347,13 +365,30 @@ namespace Radio.Broadcast
             }
         }
 
+        /// <summary>По ленте едет концерт: заявки ждут, их таймеры стоят (ночь 3).</summary>
+        public bool ConcertOnAir =>
+            _tape.Exists(t => !t.Quick && t.Source.Kind == InboxKind.Story && t.Source.Story.Kind == StoryElementKind.Concert);
+
+        /// <summary>
+        /// Событие посреди эфира (налёт): разговор надо начать прямо сейчас. Слушает
+        /// экран эфира — прячется и запускает узел, как у сюжетного элемента.
+        /// </summary>
+        public event Action<StoryElement> StoryEventFired;
+
         private bool TickInbox(float dt)
         {
             var changed = false;
+            var concert = ConcertOnAir;
 
             for (var i = _inbox.Count - 1; i >= 0; i--)
             {
                 var item = _inbox[i];
+
+                if (concert && item.Kind == InboxKind.Request)
+                {
+                    continue;
+                }
+
                 item.TimeLeft -= dt;
 
                 if (item.TimeLeft > 0f)
@@ -400,6 +435,21 @@ namespace Radio.Broadcast
                     continue;
                 }
 
+                // Событие ждёт, пока сложатся условия и пойдёт концерт: налёт в 04:15
+                // случается, только если концерт в этот момент звучит (или начнётся позже).
+                if (element.Kind == StoryElementKind.Event)
+                {
+                    if (!ConcertOnAir || !ConditionMet(element.Condition))
+                    {
+                        continue;
+                    }
+
+                    _pendingStory.RemoveAt(i);
+                    StoryEventFired?.Invoke(element);
+                    changed = true;
+                    continue;
+                }
+
                 _pendingStory.RemoveAt(i);
 
                 if (!ConditionMet(element.Condition))
@@ -421,7 +471,10 @@ namespace Radio.Broadcast
             return changed;
         }
 
-        /// <summary>«FLAG_A;!FLAG_B» — все флаги мира из списка истинны, с «!» — ложны.</summary>
+        /// <summary>
+        /// «FLAG_A;!FLAG_B;MODE=read|debunk» — все условия выполняются: флаг истинен,
+        /// с «!» — ложен, с «=» — значение флага (текст, число или true/false) одно из перечисленных.
+        /// </summary>
         private static bool ConditionMet(string condition)
         {
             if (string.IsNullOrWhiteSpace(condition))
@@ -431,8 +484,20 @@ namespace Radio.Broadcast
 
             var world = Radio.World.GameSession.Current != null ? Radio.World.GameSession.Current.World : null;
 
-            foreach (var raw in condition.Split(';', ','))
+            foreach (var raw in condition.Split(';'))
             {
+                var equals = raw.IndexOf('=');
+
+                if (equals > 0)
+                {
+                    if (!ValueMatches(world, raw.Substring(0, equals).Trim().TrimStart('$'), raw.Substring(equals + 1)))
+                    {
+                        return false;
+                    }
+
+                    continue;
+                }
+
                 var name = raw.Trim().TrimStart('$');
                 var negate = name.StartsWith("!");
                 name = name.TrimStart('!').TrimStart('$').Trim();
@@ -451,6 +516,37 @@ namespace Radio.Broadcast
             }
 
             return true;
+        }
+
+        private static bool ValueMatches(Radio.World.WorldState world, string name, string allowed)
+        {
+            string value = null;
+
+            if (world != null)
+            {
+                if (world.TryGet<string>(name, out var text))
+                {
+                    value = text;
+                }
+                else if (world.TryGet<bool>(name, out var flag))
+                {
+                    value = flag ? "true" : "false";
+                }
+                else if (world.TryGet<float>(name, out var number))
+                {
+                    value = number.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+            }
+
+            foreach (var option in allowed.Split('|'))
+            {
+                if (string.Equals(option.Trim(), value ?? "false", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool TickSpawn(float dt)
@@ -522,11 +618,19 @@ namespace Radio.Broadcast
                 return false;
             }
 
-            var ad = _ads[_random.Next(_ads.Count)];
+            // Снятые по сюжету ролики (R-01 после концерта) больше не приходят.
+            var ads = _ads.FindAll(a => !IsPulled(a));
 
-            if (ad == _lastAd && _ads.Count > 1)
+            if (ads.Count == 0)
             {
-                ad = _ads[(_ads.IndexOf(ad) + 1) % _ads.Count];
+                return false;
+            }
+
+            var ad = ads[_random.Next(ads.Count)];
+
+            if (ad == _lastAd && ads.Count > 1)
+            {
+                ad = ads[(ads.IndexOf(ad) + 1) % ads.Count];
             }
 
             _lastAd = ad;
@@ -538,6 +642,22 @@ namespace Radio.Broadcast
                 TimeLeft = settings.adTimeout,
             });
             return true;
+        }
+
+        private bool IsPulled(AdSpot ad)
+        {
+            var world = Radio.World.GameSession.Current != null ? Radio.World.GameSession.Current.World : null;
+
+            foreach (var pulled in settings.pulledAds ?? Array.Empty<BroadcastSettings.PulledAd>())
+            {
+                if (string.Equals(pulled.id, ad.Id, StringComparison.OrdinalIgnoreCase)
+                    && world != null && world.TryGet<bool>(pulled.flag, out var flag) && flag)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool TickTape(float dt)
@@ -668,17 +788,20 @@ namespace Radio.Broadcast
             return true;
         }
 
-        /// <summary>Сюжетный элемент отыгран (разговор или объявление): он уезжает на ленту.</summary>
-        public bool PlaceStory(InboxItem item)
+        /// <summary>
+        /// Сюжетный элемент отыгран (разговор или объявление): он уезжает на ленту.
+        /// <paramref name="quick"/> — коротко, со временем в пути по умолчанию (отменённый концерт).
+        /// </summary>
+        public bool PlaceStory(InboxItem item, bool quick = false)
         {
             if (Phase != BroadcastPhase.Running || item == null || item.Kind != InboxKind.Story || !_inbox.Contains(item))
             {
                 return false;
             }
 
-            var travel = item.Story.Travel > 0f ? item.Story.Travel : settings.storyTravelFallback;
+            var travel = !quick && item.Story.Travel > 0f ? item.Story.Travel : settings.storyTravelFallback;
             _inbox.Remove(item);
-            _tape.Add(new TapeItem { Source = item, Duration = travel });
+            _tape.Add(new TapeItem { Source = item, Duration = travel, Quick = quick });
             Changed?.Invoke();
             return true;
         }
@@ -837,6 +960,25 @@ namespace Radio.Broadcast
             Phase = BroadcastPhase.Idle;
             _inbox.Clear();
             _tape.Clear();
+        }
+
+        /// <summary>
+        /// Отладка: закончить эфир сразу, как пройденный, — с теми итогами, что набраны.
+        /// Входящие и лента сбрасываются: несработавшие сюжетные элементы (звонки,
+        /// объявления) пропадают, их флаги не ставятся.
+        /// </summary>
+        public void DebugFinishNow()
+        {
+            if (Phase == BroadcastPhase.Idle)
+            {
+                return;
+            }
+
+            _inbox.Clear();
+            _tape.Clear();
+            _pendingStory.Clear();
+            Tally.Notes.Add("Отладка: эфир пропущен.");
+            Finish();
         }
 
         /// <summary>Отладка: перемотать время эфира к концу.</summary>

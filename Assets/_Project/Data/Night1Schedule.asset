@@ -12,4 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a92efb89a9aab884fa057cee03bfa399, type: 3}
   m_Name: Night1Schedule
   m_EditorClassIdentifier: Assembly-CSharp::Radio.World.NightSchedule
-  entries: []
+  entries:
+  - id: n2_cat_senses_duty
+    night: 2
+    when:
+      at: 05:30
+      delaySeconds: 0.5
+      afterStandUp: 0
+    yarnNode: Night2_CatSensesDuty

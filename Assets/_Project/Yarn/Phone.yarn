@@ -21,6 +21,23 @@ title: Phone_Pickup
 <<elseif $night == 2 and not $STORY_N2_BOSS_CALL_DONE>>
     // Начало ночи 2, через ~2 минуты после пробуждения — итоги ночи 1 (Night2.yarn).
     <<jump Night2_BossCall>>
+// Звонки по часам, которые начинаются только со звонящего телефона: трубка, снятая
+// заранее, — просто гудки.
+<<elseif $night == 2 and $time_minutes >= 210 and not $STORY_N2_SEVER_CALL_DONE and phone_was_ringing()>>
+    // 03:30 — Север (Night2_Sever.yarn).
+    <<jump Night2_SeverCall>>
+<<elseif $night == 2 and $time_minutes >= 330 and not $STORY_N2_DUTY_CALL_DONE and phone_was_ringing()>>
+    // ~05:30 — Дежурный, поверх расписания (Night2_Duty.yarn).
+    <<jump Night2_DutyCall>>
+<<elseif $night == 3 and not $STORY_N3_BOSS_CALL_DONE>>
+    // Начало ночи 3, через ~2 минуты после пробуждения — Викторыч (Night3.yarn).
+    <<jump Night3_BossCall>>
+<<elseif $night == 3 and $time_minutes >= 210 and not $STORY_N3_KRAVETS_DONE and phone_was_ringing()>>
+    // 03:30 — Кравец (Night3_Kravets.yarn). Если в ночи 2 сказали правду — он приходит сам.
+    <<jump Night3_KravetsCall>>
+<<elseif $night == 3 and $time_minutes >= 300 and not $STORY_N3_GARAGE_DONE and phone_was_ringing()>>
+    // 05:00 — Яна или Медведь после концерта (Night3_Kravets.yarn).
+    <<jump Night3_AfterConcertCall>>
 <<else>>
     <<jump Phone_Idle>>
 <<endif>>

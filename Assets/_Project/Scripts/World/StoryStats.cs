@@ -17,6 +17,18 @@ namespace Radio.World
         public const string GirlFriend = "GirlFriend";
         public const string CatHunger = "CatHunger";
 
+        /// <summary>
+        /// Ось «Апофения» (GDD 01.6): высокая — город в панике ищет виноватых, низкая — не
+        /// замечает настоящую Хтонь. Заведена в ночи 3; эффектов пока нет.
+        /// </summary>
+        public const string Apophenia = "Apophenia";
+
+        /// <summary>Счётчик «Гараж» (рок-клуб), GDD 01.6. Заведён в ночи 2; эффектов пока нет.</summary>
+        public const string Garage = "Garage";
+
+        /// <summary>Счётчик «Алиса и Серёга», GDD 01.6 (сближение с Алисой). Устройство ветки — думаем.</summary>
+        public const string Alice = "Alice";
+
         public readonly struct Stat
         {
             public readonly string Name;
@@ -45,6 +57,9 @@ namespace Radio.World
             new Stat(Cult, -5f, 5f, 0f, true),
             new Stat(GirlFriend, -5f, 5f, 0f, true),
             new Stat(CatHunger, 0f, 100f, 0f, false),
+            new Stat(Apophenia, -5f, 5f, 0f, true),
+            new Stat(Garage, 0f, 99f, 0f, true),
+            new Stat(Alice, 0f, 99f, 0f, true),
         };
 
         public static bool TryFind(string name, out Stat stat)

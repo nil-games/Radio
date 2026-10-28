@@ -22,6 +22,14 @@ MonoBehaviour:
   - "\u041A-02"
   - "\u041A-03"
   - "\u041A-04"
+  foundCassettes:
+  - id: "\u041A-06"
+    flag: ACTION_N2_GARAGE_AIRED
+  - id: "\u041A-07"
+    flag: STORY_GARAGE_LIVE_TAPE
+  pulledAds:
+  - id: R-01
+    flag: STORY_N3_AD_PULLED
   includeStrangeCassette: 1
   strangeCassetteId: "\u041A-05"
   durationSeconds: 90

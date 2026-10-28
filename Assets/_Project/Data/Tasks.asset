@@ -43,7 +43,7 @@ MonoBehaviour:
     time: 05:00
   - id: go_to_sleep
     text: "\u041B\u0435\u0447\u044C \u0441\u043F\u0430\u0442\u044C"
-    time: 05:30
+    time: 06:00
   - id: answer_phone_n2
     text: "\u041E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \u043D\u0430 \u0437\u0432\u043E\u043D\u043E\u043A"
     time: 00:00:02
@@ -52,5 +52,79 @@ MonoBehaviour:
       \u0437\u0430\u0433\u043B\u0443\u0448\u0438\u0442\u044C \u043F\u0435\u0441\u043D\u044E
       \u0432 \u043A\u0430\u0441\u0441\u0435\u0442\u043D\u043E\u043C \u043F\u043B\u0435\u0435\u0440\u0435"
     time: 00:00
+  - id: start_broadcast_n2_1
+    text: "\u0412\u044B\u0439\u0442\u0438 \u0432 \u044D\u0444\u0438\u0440"
+    time: 00:30:02
+  - id: door_knock_n2_zina
+    text: "\u041A\u0442\u043E-\u0442\u043E \u043F\u043E\u0441\u0442\u0443\u0447\u0430\u043B"
+    time: 01:30:02
+  - id: start_broadcast_n2_2
+    text: "\u0412\u044B\u0439\u0442\u0438 \u0432 \u044D\u0444\u0438\u0440"
+    time: 02:00:02
+  - id: door_knock_n2_kolya
+    text: "\u041A\u0442\u043E-\u0442\u043E \u0437\u0432\u043E\u043D\u0438\u0442 \u0432
+      \u0434\u0432\u0435\u0440\u044C"
+    time: 05:00:02
+  - id: inspect_stash
+    text: "(\u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E) \u041E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C
+      \u043D\u0430\u0445\u043E\u0434\u043A\u0438 \u0438\u0437 \u0442\u0430\u0439\u043D\u0438\u043A\u0430"
+    time: 05:00:02
+  - id: answer_phone_duty
+    text: "\u041E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \u043D\u0430 \u0437\u0432\u043E\u043D\u043E\u043A"
+    time: 05:30:02
+  - id: start_broadcast_n2_3
+    text: "\u0412\u044B\u0439\u0442\u0438 \u0432 \u044D\u0444\u0438\u0440"
+    time: 04:00:02
+  - id: answer_phone_sever
+    text: "\u041E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \u043D\u0430 \u0437\u0432\u043E\u043D\u043E\u043A"
+    time: 03:30:02
+  - id: check_radio
+    text: "(\u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E) \u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C
+      \u0440\u0430\u0434\u0438\u043E"
+    time: 03:30:02
+  - id: go_to_sleep_n2
+    text: "\u041B\u0435\u0447\u044C \u0441\u043F\u0430\u0442\u044C"
+    time: 06:00:02
+  - id: door_knock_n2_yana
+    text: "\u041A\u0442\u043E-\u0442\u043E \u0441\u0442\u0443\u0447\u0438\u0442 \u0432
+      \u0434\u0432\u0435\u0440\u044C"
+    time: 03:00:02
+  - id: answer_phone_n3
+    text: "\u041E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \u043D\u0430 \u0437\u0432\u043E\u043D\u043E\u043A"
+    time: 00:00:03
+  - id: check_mail_n3
+    text: "(\u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E) \u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C
+      \u043F\u043E\u0447\u0442\u0443"
+    time: 00:00:03
+  - id: start_broadcast_n3_1
+    text: "\u0412\u044B\u0439\u0442\u0438 \u0432 \u044D\u0444\u0438\u0440"
+    time: 00:30:03
+  - id: door_knock_n3_bear
+    text: "\u041A\u0442\u043E-\u0442\u043E \u0441\u0442\u0443\u0447\u0438\u0442 \u0432
+      \u0434\u0432\u0435\u0440\u044C"
+    time: 01:30:03
+  - id: start_broadcast_n3_2
+    text: "\u0412\u044B\u0439\u0442\u0438 \u0432 \u044D\u0444\u0438\u0440"
+    time: 02:00:03
+  - id: door_knock_n3_eduard
+    text: "\u041A\u0442\u043E-\u0442\u043E \u0441\u0442\u0443\u0447\u0438\u0442 \u0432
+      \u0434\u0432\u0435\u0440\u044C"
+    time: 02:30:03
+  - id: answer_phone_kravets
+    text: "\u041E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \u043D\u0430 \u0437\u0432\u043E\u043D\u043E\u043A"
+    time: 03:30:03
+  - id: door_knock_n3_kravets
+    text: "\u041A\u0442\u043E-\u0442\u043E \u0441\u0442\u0443\u0447\u0438\u0442 \u0432
+      \u0434\u0432\u0435\u0440\u044C"
+    time: 03:30:03
+  - id: start_broadcast_n3_3
+    text: "\u0412\u044B\u0439\u0442\u0438 \u0432 \u044D\u0444\u0438\u0440"
+    time: 04:00:03
+  - id: answer_phone_n3_late
+    text: "\u041E\u0442\u0432\u0435\u0442\u0438\u0442\u044C \u043D\u0430 \u0437\u0432\u043E\u043D\u043E\u043A"
+    time: 05:00:03
+  - id: go_to_sleep_n3
+    text: "\u041B\u0435\u0447\u044C \u0441\u043F\u0430\u0442\u044C"
+    time: 06:00:03
   startTasks:
   - answer_phone

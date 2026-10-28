@@ -279,23 +279,20 @@ namespace Radio.Minigames
         }
 
         /// <summary>
-        /// Часы на экране эфира идут от начала эфира до отметки после него; если отметки
-        /// нет — на час вперёд (один эфир ≈ один игровой час, GDD 02.22).
+        /// Часы на экране эфира идут полчаса от начала эфира (эфир — 30 игровых минут,
+        /// решение автора 28.10.2026). Куда часы смены встанут после эфира — отдельно,
+        /// «Время после победы»: пустые получасы (свободные окна) перескакиваются.
         /// </summary>
         private void BeginBroadcast()
         {
             var session = GameSession.Current;
             var night = session != null ? session.Time.Night : 1;
             var now = session != null ? session.Time.Minutes : 0;
-            var end = now + 60;
-
-            if (TryParseClock(_run.timeAfterWin, out var hour, out var minute))
-            {
-                end = Mathf.Max(now, hour * 60 + minute);
-            }
-
-            broadcast.Begin(night, BroadcastNumber(_run), now, end);
+            broadcast.Begin(night, BroadcastNumber(_run), now, now + BroadcastMinutes);
         }
+
+        /// <summary>Сколько игровых минут идёт эфир на экранных часах.</summary>
+        public const int BroadcastMinutes = 30;
 
         /// <summary>
         /// Какой это по счёту эфир своей ночи (1, 2, 3…): по нему лист «Сложность»
@@ -343,11 +340,49 @@ namespace Radio.Minigames
             _debugRun = true;
             _pending = false;
             TakeOverPlayer();
-            broadcast.Begin(night, Mathf.Max(1, number), now, now + 60);
+            broadcast.Begin(night, Mathf.Max(1, number), now, now + BroadcastMinutes);
             Debug.Log($"{nameof(MinigameHost)}: отладка — эфир {number} ночи {night}.", this);
         }
 
         private bool _debugRun;
+
+        /// <summary>
+        /// Отладка (правый Ctrl, затем P): засчитать эфир пройденным. Идёт эфир — он
+        /// заканчивается сразу, с набранными итогами. Эфир не начат, но открыт по часам —
+        /// засчитывается без игры. Дальше всё как после настоящего эфира: флаг эфира,
+        /// задача снята, часы сдвинуты, узел «после эфира». Возвращает, что сделано.
+        /// </summary>
+        public string DebugCompleteBroadcast()
+        {
+            if (broadcast != null && broadcast.Phase != Radio.Broadcast.BroadcastPhase.Idle)
+            {
+                broadcast.DebugFinishNow();
+                return "эфир закончен досрочно";
+            }
+
+            var index = FindOpenRun();
+
+            if (index < 0 || runs[index].kind != RunKind.Broadcast)
+            {
+                return "сейчас нет открытого эфира";
+            }
+
+            _run = runs[index];
+            _pending = false;
+
+            if (!string.IsNullOrWhiteSpace(_run.task))
+            {
+                var tasks = FindAnyObjectByType<TaskLog>();
+
+                if (tasks != null)
+                {
+                    tasks.Complete(_run.task);
+                }
+            }
+
+            HandleWon();
+            return $"эфир {_run.id} засчитан без игры";
+        }
 
         private void HandleBroadcastFinished(Radio.Broadcast.BroadcastTally tally)
         {
@@ -489,11 +524,7 @@ namespace Radio.Minigames
                 return;
             }
 
-            var parts = timeAfterWin.Split(':');
-
-            if (parts.Length != 2
-                || !int.TryParse(parts[0], out var hour)
-                || !int.TryParse(parts[1], out var minute))
+            if (!TryParseClock(timeAfterWin, out var hour, out var minute))
             {
                 Debug.LogError($"{nameof(MinigameHost)}: время «{timeAfterWin}» не в формате ЧЧ:ММ.", this);
                 return;

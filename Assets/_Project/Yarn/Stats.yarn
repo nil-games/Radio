@@ -5,13 +5,16 @@
 //   $Cult        от -5 до +5, старт 0
 //   $GirlFriend  от -5 до +5, старт 0
 //   $CatHunger   от 0 до 100, старт 0
+//   $Apophenia   ось «Апофения» (GDD 01.6), от -5 до +5, старт 0
+//   $Garage      счётчик «Гараж» (рок-клуб, GDD 01.6), от 0, старт 0
+//   $Alice       счётчик «Алиса и Серёга» (сближение с Алисой, GDD 01.6), от 0, старт 0
 //
 // Как менять в диалоге:
 //   <<set $Crime = $Crime + 1>>
 //   <<set $GirlFriend = $GirlFriend - 2>>
 //
 // За границы выйти нельзя: игра сама прижмёт значение к краю диапазона.
-// Любое изменение $Crime, $Cult и $GirlFriend показывает игроку в левом верхнем
+// Любое изменение $Crime, $Cult, $GirlFriend, $Apophenia, $Garage и $Alice показывает игроку в левом верхнем
 // углу «Это будет иметь последствия». $CatHunger меняется молча.
 //
 // Диапазоны заданы в коде (Scripts/World/StoryStats.cs). Меняя их, поправь
@@ -24,4 +27,7 @@ title: Stats_Declarations
 <<declare $Cult = 0>>
 <<declare $GirlFriend = 0>>
 <<declare $CatHunger = 0>>
+<<declare $Apophenia = 0>>
+<<declare $Garage = 0>>
+<<declare $Alice = 0>>
 ===

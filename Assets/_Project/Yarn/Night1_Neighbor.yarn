@@ -49,10 +49,16 @@ title: Night1_Neighbor
 
 
 // Общий конец визита: дальше коридор (N1-04) — игрок идёт от двери обратно.
+// Коридор — Хтонь поверх расписания (28.10.2026): слот не занимает, часы не двигает.
+// Поэтому часы сразу встают на эфир 3 (04:00), а если эфир выключили — на кошку (05:00).
 title: Night1_NeighborDone
 ---
 <<task_add walk_around>>
-<<advance_time_to 3 30>>
+<<if $ACTION_N1_AIR_OFF_FOR_NEIGHBOR>>
+    <<advance_time_to 5 0>>
+<<else>>
+    <<advance_time_to 4 0>>
+<<endif>>
 ===
 
 

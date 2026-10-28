@@ -31,6 +31,33 @@ namespace Radio.Broadcast
                  "столько, сколько разрешает «Кассет в пуле» на листе «Сложность».")]
         public string[] startCassettes = { "К-01", "К-02", "К-03", "К-04" };
 
+        [System.Serializable]
+        public struct FoundCassette
+        {
+            [Tooltip("ID кассеты из таблицы: К-06.")]
+            public string id;
+
+            [Tooltip("Флаг мира: когда он true, кассета у игрока и входит в пул эфира.")]
+            public string flag;
+        }
+
+        [Tooltip("Кассеты, найденные по сюжету: входят в пул, когда поставлен их флаг " +
+                 "(К-06 «Гараж. Демо» — после звонка Яны). Пул по-прежнему ограничен листом «Сложность».")]
+        public FoundCassette[] foundCassettes = System.Array.Empty<FoundCassette>();
+
+        [System.Serializable]
+        public struct PulledAd
+        {
+            [Tooltip("ID ролика из листа «Реклама»: R-01.")]
+            public string id;
+
+            [Tooltip("Флаг мира: когда он true, ролик больше не приходит.")]
+            public string flag;
+        }
+
+        [Tooltip("Ролики, которые снимают по сюжету (R-01 «Уют» — после концерта «Гаража», ночь 3).")]
+        public PulledAd[] pulledAds = System.Array.Empty<PulledAd>();
+
         [Tooltip("Добавить странную кассету К-05 сверх пула (для теста).")]
         public bool includeStrangeCassette = true;
 

@@ -90,6 +90,18 @@ namespace Radio.Broadcast
 
         /// <summary>Объявление: ведущий читает его в эфир.</summary>
         Announcement,
+
+        /// <summary>
+        /// Концерт (ночь 3): длинный блок на ленте. Пока он едет, заявки во входящих
+        /// ждут — их таймеры стоят.
+        /// </summary>
+        Concert,
+
+        /// <summary>
+        /// Событие посреди эфира (налёт, ночь 3): во входящие не приходит, а само
+        /// начинает разговор в свою секунду — и только пока по ленте едет концерт.
+        /// </summary>
+        Event,
     }
 
     /// <summary>
@@ -107,8 +119,8 @@ namespace Radio.Broadcast
         public string Node;
 
         /// <summary>
-        /// Флаги мира через «;»: все должны быть истинны, «!» перед именем — ложен.
-        /// Пусто — элемент приходит всегда.
+        /// Условия через «;», все должны выполняться: «FLAG» — флаг истинен, «!FLAG» — ложен,
+        /// «FLAG=a|b» — значение флага одно из перечисленных. Пусто — элемент приходит всегда.
         /// </summary>
         public string Condition;
 
@@ -339,7 +351,10 @@ namespace Radio.Broadcast
                     Night = table.GetInt(row, "Ночь"),
                     Broadcast = Mathf.Max(1, table.GetInt(row, "Эфир")),
                     AppearAt = table.GetFloat(row, "Появление"),
-                    Kind = kind.StartsWith("объяв") ? StoryElementKind.Announcement : StoryElementKind.Call,
+                    Kind = kind.StartsWith("объяв") ? StoryElementKind.Announcement
+                        : kind.StartsWith("концерт") ? StoryElementKind.Concert
+                        : kind.StartsWith("событ") ? StoryElementKind.Event
+                        : StoryElementKind.Call,
                     Title = table.Get(row, "Заголовок"),
                     Node = table.Get(row, "Узел"),
                     Condition = table.Get(row, "Условие"),

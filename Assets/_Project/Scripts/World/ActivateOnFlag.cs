@@ -9,6 +9,8 @@ namespace Radio.World
     /// <remarks>
     /// Висит не на самих объектах, а на ком-то включённом: выключенный объект не получает
     /// ни Start, ни событий и сам себя включить не может. Срабатывает один раз.
+    /// С галочкой «Выключать» работает наоборот: провод на стояке пропадает, когда его сняли.
+    /// После загрузки сохранения флаги ставятся заново — объекты встают как были (GDD 02.12).
     /// </remarks>
     public sealed class ActivateOnFlag : MonoBehaviour
     {
@@ -17,6 +19,9 @@ namespace Radio.World
 
         [Tooltip("Объекты, которые включаются. В сцене их нужно оставить выключенными.")]
         [SerializeField] private GameObject[] targets = System.Array.Empty<GameObject>();
+
+        [Tooltip("Выключать объекты, а не включать. Тогда в сцене их нужно оставить включёнными.")]
+        [SerializeField] private bool deactivate;
 
         private WorldState _world;
         private bool _done;
@@ -60,7 +65,7 @@ namespace Radio.World
             {
                 if (target != null)
                 {
-                    target.SetActive(true);
+                    target.SetActive(!deactivate);
                 }
             }
         }

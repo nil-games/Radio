@@ -36,6 +36,11 @@ namespace Radio.Dialogue
             [Tooltip("Сдвиг собеседника на этом плане, в долях экрана: x вправо, y вверх. " +
                      "Отрицательный y опускает его ниже; ноги при этом могут уйти за край кадра.")]
             public Vector2 portraitOffset;
+
+            [Tooltip("Во сколько раз собеседник крупнее обычного на этом плане (камера ближе к нему). " +
+                     "0 или 1 — как обычно. Растёт вверх от низа фигуры: крупный план идёт с отрицательным y, " +
+                     "чтобы ноги ушли за нижний край кадра.")]
+            public float portraitScale;
         }
 
         [Header("Планы")]
@@ -136,7 +141,7 @@ namespace Radio.Dialogue
                     continue;
                 }
 
-                return Run(shot.camera, shot.portraitOffset);
+                return Run(shot.camera, shot.portraitOffset, shot.portraitScale);
             }
 
             // Опечатку в имени плана заранее не проверить, поэтому она обязана быть громкой.
@@ -144,20 +149,20 @@ namespace Radio.Dialogue
             return null;
         }
 
-        private Coroutine ShowBack() => _current == null ? null : Run(null, Vector2.zero);
+        private Coroutine ShowBack() => _current == null ? null : Run(null, Vector2.zero, 1f);
 
-        private Coroutine Run(Camera target, Vector2 portraitOffset)
+        private Coroutine Run(Camera target, Vector2 portraitOffset, float portraitScale)
         {
             if (_running != null)
             {
                 StopCoroutine(_running);
             }
 
-            _running = StartCoroutine(Transition(target, portraitOffset));
+            _running = StartCoroutine(Transition(target, portraitOffset, portraitScale));
             return _running;
         }
 
-        private IEnumerator Transition(Camera target, Vector2 portraitOffset)
+        private IEnumerator Transition(Camera target, Vector2 portraitOffset, float portraitScale)
         {
             yield return Fade(1f);
             Switch(target);
@@ -165,7 +170,7 @@ namespace Radio.Dialogue
             // Собеседника переставляем в темноте вместе с камерой, чтобы прыжка не было видно.
             if (portrait != null)
             {
-                portrait.SetPlacement(portraitOffset);
+                portrait.SetPlacement(portraitOffset, portraitScale);
             }
 
             if (holdTime > 0f)

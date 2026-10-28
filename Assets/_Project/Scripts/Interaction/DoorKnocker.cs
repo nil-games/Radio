@@ -30,6 +30,10 @@ namespace Radio.Interaction
         [Tooltip("Флаг мира, после которого гость больше не приходит.")]
         [SerializeField] private string doneFlag = "STORY_GRANNY_VISIT_DONE";
 
+        [Tooltip("Гость приходит, только если этот флаг true (Кравец в ночи 3 — если в ночи 2 " +
+                 "сказали правду). Пусто — приходит всегда.")]
+        [SerializeField] private string onlyIfFlag;
+
         [Header("Задача")]
         [Tooltip("Задача, которая появляется с первым стуком. Снимает её сам разговор у двери. " +
                  "Пусто — без задачи.")]
@@ -188,7 +192,19 @@ namespace Radio.Interaction
             }
 
             var session = GameSession.Current;
-            return session != null && (!session.World.TryGet<bool>(doneFlag, out var done) || !done);
+
+            if (session == null)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(onlyIfFlag)
+                && (!session.World.TryGet<bool>(onlyIfFlag, out var allowed) || !allowed))
+            {
+                return false;
+            }
+
+            return !session.World.TryGet<bool>(doneFlag, out var done) || !done;
         }
 
         /// <summary>Игрок сидит за столом, играет или разговаривает — ходить он не может.</summary>

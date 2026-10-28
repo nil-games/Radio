@@ -226,6 +226,17 @@ namespace Radio.UI
                 return;
             }
 
+            // P — эфир пройден: идущий заканчивается, открытый по часам засчитывается без игры.
+            if (keyboard.pKey.wasPressedThisFrame)
+            {
+                var host = FindAnyObjectByType<Radio.Minigames.MinigameHost>(FindObjectsInactive.Include);
+                var result = host != null ? host.DebugCompleteBroadcast() : "нет MinigameHost";
+                Debug.Log($"{nameof(StoryStatsHud)}: P — {result}.", this);
+                _debugLabel.gameObject.SetActive(false);
+                RefreshDebug();
+                return;
+            }
+
             var digit = PressedDigit(keyboard);
 
             if (digit < 0)
@@ -378,6 +389,7 @@ namespace Radio.UI
                 _debugText.Append(_awaitBroadcast
                     ? "<color=#F2A82E>Эфир: нажми номер эфира этой ночи (1–4)</color>\n"
                     : "<alpha=#88>B, затем цифра — сразу эфир с этим номером этой ночи<alpha=#FF>\n");
+                _debugText.Append("<alpha=#88>P — эфир пройден (идущий — закончить, открытый — засчитать без игры)<alpha=#FF>\n");
             }
 
             _debugLabel.text = _debugText.ToString();

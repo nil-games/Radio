@@ -65,6 +65,7 @@ namespace Radio.Dialogue
         private PanelLayout[] _original;
         private RawImage _image;
         private Vector2 _placement;
+        private float _scale = 1f;
         private AspectRatioFitter _fitter;
         private VideoPlayer _player;
         private RenderTexture _texture;
@@ -208,10 +209,13 @@ namespace Radio.Dialogue
         /// Сдвинуть собеседника относительно обычного места, в долях экрана: x вправо, y вверх.
         /// Нужно планам камеры — в тесной ванной человек по центру кадра висел бы в воздухе.
         /// Низ может уйти за край экрана: обрезанные ноги лучше, чем парящий над полом человек.
+        /// <paramref name="scale"/> — во сколько раз крупнее обычного: камера ближе к нему.
+        /// Растёт вверх от низа фигуры, поэтому крупный план обычно идёт с отрицательным y.
         /// </summary>
-        public void SetPlacement(Vector2 offset)
+        public void SetPlacement(Vector2 offset, float scale = 1f)
         {
             _placement = offset;
+            _scale = scale > 0f ? scale : 1f;
             ApplyPlacement();
         }
 
@@ -226,8 +230,10 @@ namespace Radio.Dialogue
             }
 
             var rect = _image.rectTransform;
-            rect.anchorMin = new Vector2(0.5f + _placement.x, verticalSpan.x + _placement.y);
-            rect.anchorMax = new Vector2(0.5f + _placement.x, verticalSpan.y + _placement.y);
+            var bottom = verticalSpan.x + _placement.y;
+            var height = (verticalSpan.y - verticalSpan.x) * _scale;
+            rect.anchorMin = new Vector2(0.5f + _placement.x, bottom);
+            rect.anchorMax = new Vector2(0.5f + _placement.x, bottom + height);
         }
 
         private void BuildImage()

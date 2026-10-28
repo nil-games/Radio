@@ -31,6 +31,6 @@ title: Night1_CatVisit
     <<set $cat_inside = false>>
 <<set $STORY_CAT_VISIT_DONE = true>>
 
-// Конец смены: 05:30, задача «Лечь спать» (TaskAtTime на диване).
-<<advance_time_to 5 30>>
+// Конец смены: 06:00 (05:30 — свободное окно), задача «Лечь спать» (TaskAtTime на диване).
+<<advance_time_to 6 0>>
 ===
